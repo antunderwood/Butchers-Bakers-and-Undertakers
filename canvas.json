@@ -1,0 +1,12 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1000, "expand": "fill" },
+    { "file": "DirectionArchive.dc.html", "x": 0, "y": 1080, "w": 720, "h": 480 },
+    { "file": "DirectionFete.dc.html", "x": 800, "y": 1080, "w": 720, "h": 480 },
+    { "file": "DirectionGallery.dc.html", "x": 1600, "y": 1080, "w": 720, "h": 480 }
+  ],
+  "annotations": [
+    { "id": "directions-note", "x": 0, "y": 1000, "w": 700, "text": "Three alternate directions — pick one, or mix elements" }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;font-family:'Nunito', ui-rounded, sans-serif;background:#fbf3e7;color:#3a2c1f;}
+    a{color:#c4692f;} a:hover{color:#a3541f;}
+  </style>
+</helmet>
+<div style="width:720px;height:480px;position:relative;overflow:hidden;">
+  <svg width="720" height="60" style="position:absolute;top:0;left:0;">
+    <sc-for list="{{flags}}" as="f" hint-placeholder-count="9">
+      <polygon points="{{f.pts}}" fill="{{f.color}}"/>
+    </sc-for>
+  </svg>
+  <div style="position:absolute;top:70px;left:32px;right:32px;text-align:center;">
+    <h1 style="font-family:'Caveat',cursive;font-size:56px;font-weight:700;margin:0;color:#c4692f;transform:rotate(-1.5deg);">Our High Street, Then &amp; Now</h1>
+    <p style="font-size:14px;margin-top:4px;">a village scrapbook of shops we remember</p>
+  </div>
+  <svg width="640" height="120" viewBox="0 0 640 120" style="position:absolute;top:150px;left:40px;">
+    <path d="M10 100 Q 320 20 630 100" stroke="#c4692f" stroke-width="3" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>
+    <sc-for list="{{pins}}" as="p" hint-placeholder-count="5">
+      <circle cx="{{p.cx}}" cy="{{p.cy}}" r="16" fill="#fff" stroke="#c4692f" stroke-width="2.5"/>
+    </sc-for>
+  </svg>
+  <div style="position:absolute;top:300px;left:60px;width:280px;height:150px;background:#fff;border-radius:12px;border:2px solid #3a2c1f;transform:rotate(-3deg);box-shadow:4px 6px 0 #e8c9a3;display:flex;align-items:center;justify-content:center;">
+    <span style="font-family:'Caveat',cursive;font-size:20px;color:#8a6a45;">old photo goes here</span>
+  </div>
+  <div style="position:absolute;top:320px;left:380px;width:280px;height:150px;background:#fff;border-radius:12px;border:2px solid #3a2c1f;transform:rotate(2deg);box-shadow:4px 6px 0 #e8c9a3;display:flex;align-items:center;justify-content:center;">
+    <span style="font-family:'Caveat',cursive;font-size:20px;color:#8a6a45;">today's photo goes here</span>
+  </div>
+  <p style="position:absolute;bottom:12px;left:32px;right:32px;font-size:11px;color:#8a6a45;text-align:center;">
+    Fete style &mdash; warm, hand-made, community scrapbook feel.
+  </p>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    const colors = ["#c4692f","#87338b","#3a8f6b","#e2b23a"];
+    const flags = Array.from({length:9}).map((_,i) => ({
+      pts: `${20+i*80},0 ${60+i*80},0 ${40+i*80},40`,
+      color: colors[i % colors.length]
+    }));
+    const pins = Array.from({length:5}).map((_,i) => ({
+      cx: 40 + i*140, cy: 100 - (i%2)*40
+    }));
+    return { flags, pins };
+  }
+}
+</script>
+</body>
+</html>
