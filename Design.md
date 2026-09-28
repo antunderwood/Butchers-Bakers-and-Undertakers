@@ -78,14 +78,19 @@ Rather than fabricate specific facts, the page:
   (`#noor-mahal`), so Back/Forward and shared links work; pin and chip
   clicks push history, prev/next replaces it. Grid cards link back with
   "Show on map".
-- **Brief and full cards**: the map panel is a brief card (number, name,
-  trade, one to two sentence summary) with Read more, which jumps to the
+- **Brief and full cards**: the map panel is a brief card (compare photo,
+  number, name, trade, one to two sentence summary) with Read more, which jumps to the
   shop's Then & Now card (`#about-<id>`) and opens its full description.
   Then & Now cards show the same summary, with the description in a
   `<details>` Read more toggle (animated where `::details-content` is
   supported). Text lives in each `TRADES` entry's `summary` and
   `description` fields, to be written by the user; empty fields show
   honest placeholders.
+- **Leader line**: a rust line joins the open shop's marker to its card
+  (to the card's left edge on desktop, the sheet's top edge on phones).
+  It is redrawn in the rAF loop, so it tracks flyTo, drags, zoom and the
+  sticky sheet, and hides when the marker leaves the map view. On phones
+  the map centres the marker in the part the sheet leaves uncovered.
 - **Map**: Leaflet 1.9.4, vendored in `vendor/leaflet/` (BSD 2-Clause),
   on OpenStreetMap tiles, so the map can grow with the shop list and pan or
   zoom along the whole street. Markers use real OSM coordinates (the `osm`
