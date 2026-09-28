@@ -86,7 +86,12 @@ Rather than fabricate specific facts, the page:
   `min(520px, 70vh)` tall: an earlier full-width, full-aspect-ratio map was
   too tall ("ridiculous amount of screen real estate"). The chips stay so
   navigation doesn't depend on precisely tapping a small pin.
-  Not yet ported to `Main.dc.html`, which still has the static map.
+  Ported to `Main.dc.html`: there Leaflet loads from jsdelivr (with the
+  same integrity hashes) because the canvas bundle ships no local folders,
+  the shop view clones the rendered grid card (the canvas only resolves
+  literal `src` attributes), and history calls are wrapped in case the
+  preview sandboxes them. Checked in Chrome through a local harness that
+  expands the templates, not in the canvas itself.
 - **Parallax**: implemented as a `requestAnimationFrame` loop reading
   `getBoundingClientRect()` each frame and setting `transform: translateY()`
   directly via refs — not a `scroll` event listener. The event-listener
@@ -142,7 +147,7 @@ Helvetica Neue until it is republished with the font.
   is a placeholder.
 - Photographs are examples illustrating the *kind* of image each slot wants,
   not the confirmed photo for that address.
-- `Main.dc.html` map pin positions were hand-measured from a screenshot
-  crop; `index.html` now uses OSM coordinates instead.
+- `street-map.jpg` is no longer used by either page; the published
+  canvas bundle still has the old static map until it is republished.
 - OSM tags Pin Wei as `disused:amenity=restaurant`, so it may have closed.
   Ansells is a bookmaker in OSM (it was listed as a florist before).
