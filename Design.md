@@ -69,12 +69,24 @@ Rather than fabricate specific facts, the page:
   photograph (not a separate `<input type="range">`), using
   `setPointerCapture` so the drag continues even if the pointer leaves the
   element. Same mechanic on the hero and all 8 shop cards.
-- **Map navigation**: the map is a small (300px) locator card, not a
-  full-bleed image — an earlier full-width, full-aspect-ratio version was
-  too tall ("ridiculous amount of screen real estate"). Pins on the map and
-  a parallel list of name chips both jump-scroll to the matching shop card;
-  the chips exist so navigation doesn't depend on precisely tapping a small
-  pin.
+- **Map navigation** (index.html, Sept 2026): jump-scrolling from a pin
+  down to its card broke the back-and-forth between map and shops, so the
+  shop now opens in a panel docked beside the map (a bottom sheet on phones,
+  `position: sticky` so it leaves with the section). The map stays live:
+  another pin swaps the panel, prev/next walks the street in order, and
+  "All shops" returns to the chips. The open shop is in the URL hash
+  (`#noor-mahal`), so Back/Forward and shared links work; pin and chip
+  clicks push history, prev/next replaces it. Grid cards link back with
+  "Show on map".
+- **Map**: Leaflet 1.9.4, vendored in `vendor/leaflet/` (BSD 2-Clause),
+  on OpenStreetMap tiles, so the map can grow with the shop list and pan or
+  zoom along the whole street. Markers use real OSM coordinates (the `osm`
+  field names each element). Scroll-wheel zoom is off and phones pan with
+  two fingers, so the map never traps page scrolling. The map is capped at
+  `min(520px, 70vh)` tall: an earlier full-width, full-aspect-ratio map was
+  too tall ("ridiculous amount of screen real estate"). The chips stay so
+  navigation doesn't depend on precisely tapping a small pin.
+  Not yet ported to `Main.dc.html`, which still has the static map.
 - **Parallax**: implemented as a `requestAnimationFrame` loop reading
   `getBoundingClientRect()` each frame and setting `transform: translateY()`
   directly via refs — not a `scroll` event listener. The event-listener
@@ -130,5 +142,7 @@ Helvetica Neue until it is republished with the font.
   is a placeholder.
 - Photographs are examples illustrating the *kind* of image each slot wants,
   not the confirmed photo for that address.
-- Map pin positions were hand-measured from a screenshot crop; nudge in the
-  editor if any sit off their real shopfront.
+- `Main.dc.html` map pin positions were hand-measured from a screenshot
+  crop; `index.html` now uses OSM coordinates instead.
+- OSM tags Pin Wei as `disused:amenity=restaurant`, so it may have closed.
+  Ansells is a bookmaker in OSM (it was listed as a florist before).

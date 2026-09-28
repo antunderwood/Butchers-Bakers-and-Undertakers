@@ -6,6 +6,7 @@
 <title>Abbots Langley High Street</title>
 <meta name="description" content="Every shop Abbots Langley High Street has known: then and now, one shopfront at a time.">
 <script>document.documentElement.classList.add("js");</script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <style>
   /* Self-hosted Inter Tight (SIL OFL 1.1, see fonts/OFL.txt), Latin subset, variable weight */
   @font-face{font-family:'Inter Tight';font-style:normal;font-weight:400 900;font-display:swap;src:url(fonts/inter-tight-latin.woff2) format('woff2');}
@@ -107,35 +108,51 @@
     .fill span{background:linear-gradient(var(--ink), var(--ink)) 0 0 / var(--p, 100%) 100% no-repeat, #c9c1b1;-webkit-background-clip:text;background-clip:text;color:transparent;}
   }
 
-  /* MAP */
-  .map-sec{padding:120px 0;background:var(--ink);color:var(--cream);overflow:hidden;}
+  /* MAP: Leaflet map, with the chosen shop docked beside it (a bottom sheet on phones) */
+  .map-sec{padding:120px 0;background:var(--ink);color:var(--cream);overflow:clip;} /* clip, not hidden: hidden would break the sticky sheet */
   .sec-head > :nth-child(2){--i:1;}
   .sec-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px 32px;}
-  .map-layout{display:flex;flex-wrap:wrap;gap:40px;margin-top:48px;align-items:flex-start;}
-  .map-card{position:relative;flex:0 0 300px;max-width:100%;aspect-ratio:1028/1100;overflow:hidden;border-radius:8px;border:1px solid var(--night-line);}
-  .map-card img{position:absolute;top:-8%;left:0;width:100%;height:116%;object-fit:cover;filter:grayscale(0.25) contrast(1.05);pointer-events:none;will-change:transform;}
-  .pin{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--cream);background:var(--ink);color:var(--cream);font-family:inherit;font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 2px 8px rgba(20,15,10,0.5);transition:transform .5s var(--ease), background .25s;}
+  .map-layout{display:grid;grid-template-columns:minmax(0, 1fr) 400px;grid-template-rows:min(520px, 70vh);gap:24px 40px;margin-top:48px;}
+  .map-card{position:relative;z-index:0;overflow:hidden;border-radius:8px;border:1px solid var(--night-line);scroll-margin-top:72px;} /* z-index keeps Leaflet's panes under the sticky header */
+  #leaflet{position:absolute;inset:0;background:#e9e4d8;font-family:inherit;}
+  #leaflet .leaflet-tile-pane{filter:grayscale(0.35) sepia(0.15) contrast(1.04);}
+  .pin{position:relative;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:2px solid var(--cream);background:var(--ink);color:var(--cream);font-weight:700;font-size:11px;box-shadow:0 2px 8px rgba(20,15,10,0.5);transition:transform .5s var(--ease), background .25s;}
   .pin::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--rust);opacity:0;pointer-events:none;}
-  .pin:hover, .pin.hot, .pin:focus-visible{transform:translate(-50%,-50%) scale(1.3);background:var(--rust);z-index:2;}
+  .pin.hot{transform:scale(1.3);background:var(--rust);}
   .pin.is-active{background:var(--rust);}
-  .pin:hover::after, .pin.hot::after, .pin.is-active::after{animation:ping 1.4s var(--ease) infinite;}
+  .pin.hot::after, .pin.is-active::after{animation:ping 1.4s var(--ease) infinite;}
+  .pin-wrap{border-radius:50%;}
   @keyframes ping{from{transform:scale(1);opacity:.9;}to{transform:scale(2.3);opacity:0;}}
-  .chips{flex:1 1 320px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;}
+  .chips{grid-area:1 / 2;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;overflow-y:auto;padding:4px 2px;margin:-4px -2px;}
+  .map-layout.open .chips{display:none;}
   .chip{display:flex;align-items:center;gap:10px;padding:10px 20px 10px 10px;border-radius:999px;border:1.5px solid #3a382f;background:transparent;color:var(--cream);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .4s var(--ease), color .4s var(--ease), border-color .4s, transform .5s var(--ease);}
   .chip b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--night-line);font-size:10px;transition:background .4s, transform .7s var(--ease);}
   .chip:hover, .chip.hot, .chip:focus-visible{background:var(--cream);color:var(--ink);border-color:var(--cream);transform:translateY(-3px);}
   .chip:hover b, .chip.hot b, .chip:focus-visible b{background:var(--rust);color:var(--cream);transform:rotate(360deg);}
   .chip.is-active{border-color:var(--rust);}
   .chip.is-active b{background:var(--rust);}
+  .shop-view{grid-area:1 / 2;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;background:var(--paper);color:var(--ink);border-radius:8px;animation:sv-open .6s var(--ease);}
+  .shop-view[hidden]{display:none;}
+  .sv-bar{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 20px;background:var(--paper);border-bottom:1px solid var(--line);}
+  .sv-back{display:inline-flex;align-items:center;gap:8px;margin-right:auto;min-height:40px;padding:0;border:0;background:none;color:var(--ink);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;--roll:var(--rust);}
+  .sv-back svg{transition:transform .6s var(--ease);}
+  .sv-back:hover svg{transform:translateX(-4px);}
+  .sv-count{font-size:12px;font-weight:700;letter-spacing:0.06em;color:var(--stone);font-variant-numeric:tabular-nums;margin-right:6px;}
+  .sv-step{display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:background .3s, color .3s, border-color .3s;}
+  .sv-step:hover{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+  .sv-body .photo{aspect-ratio:16/10;}
+  .sv-body .num{color:var(--rust);-webkit-text-stroke-color:var(--rust);}
+  /* Content swaps in from the side you stepped towards (--dx), or rises when opened from the map */
+  .sv-body > *{animation:sv-in .6s var(--ease) both;}
+  .sv-body > .info{animation-delay:.06s;}
+  @keyframes sv-open{from{opacity:0;transform:translateY(16px);}}
+  @keyframes sv-in{from{opacity:0;transform:translate(var(--dx, 0), var(--dy, 0));}}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 
   /* SHOPS */
   .shops{padding:120px 0 96px;}
   .shop-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:2px;margin-top:56px;background:var(--line);}
   .card{position:relative;background:var(--paper);}
-  .card::after{content:"";position:absolute;inset:0;border:2px solid transparent;pointer-events:none;transition:border-color .3s;}
-  .card.is-active::after{border-color:var(--rust);}
-  .card.flash::after{animation:flash 1.6s var(--ease);}
-  @keyframes flash{0%,40%{border-color:var(--rust);box-shadow:inset 0 0 0 10px rgba(181,80,46,0.35);}}
   .photo{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;}
   .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}
   .photo .then{filter:grayscale(1) sepia(0.3) contrast(1.08) brightness(0.95);}
@@ -145,12 +162,15 @@
   .card .handle{width:42px;height:42px;margin:-21px 0 0 -21px;}
   .info{display:grid;grid-template-columns:auto 1fr;gap:6px 22px;padding:24px 26px 28px;}
   .num{grid-row:span 3;font-size:72px;line-height:.78;font-weight:800;letter-spacing:-0.04em;color:transparent;-webkit-text-stroke:1px var(--ink);transition:color .6s var(--ease), -webkit-text-stroke-color .6s var(--ease), transform .7s var(--ease);}
-  .card:hover .num, .card.is-active .num{color:var(--rust);-webkit-text-stroke-color:var(--rust);transform:translateY(-3px);}
+  .card:hover .num{color:var(--rust);-webkit-text-stroke-color:var(--rust);transform:translateY(-3px);}
   .card h3{font-size:26px;letter-spacing:-0.02em;}
   .card h3 span{background:linear-gradient(currentColor, currentColor) 0 100% / 0% 2px no-repeat;transition:background-size .7s var(--ease);}
   .card:hover h3 span{background-size:100% 2px;}
   .meta{font-size:12px;color:var(--stone);margin:0;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;}
   .note{font-size:14px;line-height:1.55;margin:4px 0 0;}
+  .to-map{grid-column:2;justify-self:start;display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--rust);--roll:var(--ink);}
+  .to-map svg{transition:transform .6s var(--ease);}
+  .to-map:hover svg{transform:translateY(-3px);}
 
   /* KNOCKOUT MARQUEE */
   .band{overflow:hidden;padding:48px 0 32px;border-top:1px solid var(--line);}
@@ -205,6 +225,13 @@
     .hero-copy{grid-template-columns:1fr;}
     .intro .wrap{grid-template-columns:1fr;gap:20px;padding-top:72px;padding-bottom:72px;}
     .map-sec, .shops{padding:80px 0;}
+    .map-layout{grid-template-columns:1fr;grid-template-rows:none;}
+    .map-card{height:46vh;height:46svh;min-height:280px;}
+    .chips, .shop-view{grid-area:auto;}
+    .map-layout.open .chips{display:flex;}
+    /* Bottom sheet: sticks to the viewport while the map is on screen, leaves with the section */
+    .shop-view{position:sticky;bottom:0;z-index:5;max-height:56vh;max-height:56svh;margin:0 -20px;border-radius:16px 16px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,0.45);animation-name:sv-sheet;}
+    @keyframes sv-sheet{from{transform:translateY(100%);}}
     .shop-grid{grid-template-columns:1fr;}
     .num{font-size:56px;}
   }
@@ -295,16 +322,31 @@
           <span class="eyebrow">02 &middot; The map</span>
           <h2 class="display h2">Walk the street</h2>
         </div>
-        <span class="eyebrow" data-reveal>Tap a plot, or a name, to jump to its photo</span>
+        <span class="eyebrow" data-reveal>Tap a marker or a name to open its shop</span>
       </div>
-      <div class="map-layout">
-        <div class="map-card" data-reveal>
-          <img id="map-bg" src="street-map.jpg" alt="Map of Abbots Langley High Street"/>
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(20,15,10,0.15), transparent 30%);pointer-events:none;"></div>
-          <div id="map-pins" style="position:absolute;inset:0;"></div>
+      <div id="map-layout" class="map-layout">
+        <div id="map-card" class="map-card" data-reveal>
+          <div id="leaflet" role="region" aria-label="Map of Abbots Langley High Street"></div>
         </div>
         <div id="map-chips" class="chips"></div>
+        <section id="shop-view" class="shop-view" aria-label="Shop details" hidden>
+          <div class="sv-bar">
+            <button class="sv-back" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="roll"><span>All shops</span></span>
+            </button>
+            <span class="sv-count"></span>
+            <button class="sv-step sv-prev" type="button" aria-label="Previous shop along the street">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="sv-step sv-next" type="button" aria-label="Next shop along the street">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <article class="card sv-body"></article>
+        </section>
       </div>
+      <span id="shop-live" class="sr" aria-live="polite"></span>
       <p style="font-size:11px;color:var(--night-muted);letter-spacing:0.02em;margin-top:28px;">Map data &copy; OpenStreetMap contributors, ODbL. Markers show today's businesses at each address.</p>
     </div>
   </section>
@@ -369,25 +411,31 @@
     <p class="credits">
       Example photography: High Street, Abbots Langley &copy; Diane Sambrook, CC BY-SA 2.0; Diss traditional
       butcher's shop &copy; Evelyn Simak, CC BY-SA 2.0; Street scenes (Martin Ridley Collection), public
-      domain; all via Wikimedia Commons. Map data &copy; OpenStreetMap contributors, ODbL.
+      domain; all via Wikimedia Commons. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
+      Leaflet, BSD 2-Clause.
     </p>
   </div>
 </footer>
 
+<script src="vendor/leaflet/leaflet.js"></script>
 <script>
+// Street order, north to south (prev/next follows this). Positions are the OpenStreetMap
+// element named in `osm`, fetched Sept 2026: check it at openstreetmap.org/<osm>.
 const TRADES = [
-  { name: "Pin Wei", category: "Chinese takeaway", mapLeft: 86.9, mapTop: 7.7 },
-  { name: "Cinnamon Lodge", category: "Restaurant", mapLeft: 73.1, mapTop: 18.0 },
-  { name: "Beautiful You", category: "Beauty salon", mapLeft: 60.0, mapTop: 23.8 },
-  { name: "Noor Mahal", category: "Restaurant", mapLeft: 58.5, mapTop: 38.1 },
-  { name: "Underground Barbers", category: "Barbers", mapLeft: 69.8, mapTop: 39.0 },
-  { name: "Ansells", category: "Florist", mapLeft: 51.1, mapTop: 47.5 },
-  { name: "Budgens", category: "Supermarket", mapLeft: 66.3, mapTop: 58.7 },
-  { name: "Boots", category: "Pharmacy", mapLeft: 59.0, mapTop: 64.3 }
+  { name: "Pin Wei", category: "Chinese takeaway", osm: "way/232832789", lat: 51.706989, lng: -0.416297 },
+  { name: "Cinnamon Lodge", category: "Restaurant", osm: "node/2399910269", lat: 51.706857, lng: -0.416591 },
+  { name: "Beautiful You", category: "Beauty salon", osm: "node/2399910267", lat: 51.706778, lng: -0.416864 },
+  { name: "Noor Mahal", category: "Restaurant", osm: "node/2399910278", lat: 51.706576, lng: -0.416924 },
+  { name: "Underground Barbers", category: "Barbers", osm: "node/2399910268", lat: 51.706553, lng: -0.416660 },
+  { name: "Ansells", category: "Bookmaker", osm: "node/2399910266", lat: 51.706423, lng: -0.417050 },
+  { name: "Budgens", category: "Supermarket", osm: "way/218952090", lat: 51.706265, lng: -0.416699 },
+  { name: "Boots", category: "Pharmacy", osm: "node/2399943061", lat: 51.706196, lng: -0.416885 }
 ];
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const phone = matchMedia("(max-width: 720px)");
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const pad = (n) => String(n).padStart(2, "0");
+TRADES.forEach((t) => { t.id = t.name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); });
 
 // Wires a .compare element: drag (all pointers), hover-follow (mouse, cards only),
 // arrow keys, and a springy settle back to centre. Returns the position setter.
@@ -465,64 +513,12 @@ if (!reduce) {
   }, 2000);
 }
 
-// --- Map pins + chips, hover-linked to each other ---
-const mapPins = document.getElementById("map-pins");
-const mapChips = document.getElementById("map-chips");
-const pins = [], chips = [], cards = [];
-
-function selectShop(i) {
-  [pins, chips, cards].forEach((list) => list.forEach((el, j) => el.classList.toggle("is-active", j === i)));
-  const card = cards[i];
-  card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
-  card.classList.remove("flash");
-  void card.offsetWidth; // restart the flash animation
-  card.classList.add("flash");
-}
-function hot(i, on) {
-  pins[i].classList.toggle("hot", on);
-  chips[i].classList.toggle("hot", on);
-}
-function wire(el, i) {
-  el.addEventListener("click", () => selectShop(i));
-  el.addEventListener("pointerenter", () => hot(i, true));
-  el.addEventListener("pointerleave", () => hot(i, false));
-  el.addEventListener("focus", () => hot(i, true));
-  el.addEventListener("blur", () => hot(i, false));
-}
-
-TRADES.forEach((t, i) => {
-  const pin = document.createElement("button");
-  pin.className = "pin";
-  pin.textContent = i + 1;
-  pin.setAttribute("aria-label", `${i + 1}: ${t.name}`);
-  pin.style.top = t.mapTop + "%";
-  pin.style.left = t.mapLeft + "%";
-  mapPins.appendChild(pin);
-  pins.push(pin);
-
-  const chip = document.createElement("button");
-  chip.className = "chip";
-  chip.dataset.reveal = "";
-  chip.style.setProperty("--i", i);
-  chip.innerHTML = `<b>${i + 1}</b>${t.name}`;
-  mapChips.appendChild(chip);
-  chips.push(chip);
-
-  wire(pin, i);
-  wire(chip, i);
-});
-
-// --- Shop cards ---
-const shopGrid = document.getElementById("shop-grid");
-TRADES.forEach((t, i) => {
-  const card = document.createElement("article");
-  card.className = "card";
-  card.dataset.reveal = "";
-  card.style.setProperty("--i", i % 2);
+// --- Shop markup, shared by the grid cards and the map's shop view ---
+function shopHTML(t, i, { mapLink = false } = {}) {
   const thenSrc = i % 2 === 0 ? "photo-vintage-highstreet.jpg" : "photo-heritage-butcher.jpg";
   // ponytail: three stock photos for eight cards; vary the crop until real photos arrive
   const crop = [20, 50, 80][i % 3];
-  card.innerHTML = `
+  return `
     <div class="photo compare" tabindex="0" role="slider" aria-label="Compare then and now: ${t.name}" aria-valuemin="0" aria-valuemax="100">
       <img class="then" src="${thenSrc}" alt="Example period photograph, not this address" style="object-position:${crop}% 50%;"/>
       <div class="cap then-cap"><span>Then &middot; trade unconfirmed</span></div>
@@ -539,11 +535,134 @@ TRADES.forEach((t, i) => {
       <h3><span>${t.name}</span></h3>
       <p class="meta">Marker ${i + 1} &middot; ${t.category}</p>
       <p class="note">History and memories for this address will appear here once contributed by the community.</p>
+      ${mapLink ? `<a class="to-map" href="#${t.id}"><span class="roll"><span>Show on map</span></span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5M6 11L12 5L18 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>` : ""}
     </div>
   `;
+}
+
+// --- Map: OpenStreetMap tiles via Leaflet; markers and chips are hover-linked ---
+const mapLayout = document.getElementById("map-layout");
+const mapCard = document.getElementById("map-card");
+const mapChips = document.getElementById("map-chips");
+const pins = [], chips = [], markers = [];
+const map = L.map("leaflet", {
+  scrollWheelZoom: false, // the page scrolls past the map; zoom with the buttons, a pinch or a double-click
+  dragging: !L.Browser.mobile, // on phones one finger scrolls the page, two fingers move the map
+  minZoom: 15
+});
+map.fitBounds(TRADES.map((t) => [t.lat, t.lng]), { padding: [32, 32], maxZoom: 18 });
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+function hot(i, on) {
+  pins[i].classList.toggle("hot", on);
+  chips[i].classList.toggle("hot", on);
+}
+function hoverLink(el, i) {
+  el.addEventListener("pointerenter", () => hot(i, true));
+  el.addEventListener("pointerleave", () => hot(i, false));
+  el.addEventListener("focus", () => hot(i, true));
+  el.addEventListener("blur", () => hot(i, false));
+}
+
+TRADES.forEach((t, i) => {
+  const marker = L.marker([t.lat, t.lng], {
+    icon: L.divIcon({ className: "pin-wrap", html: `<span class="pin">${i + 1}</span>`, iconSize: [28, 28] }),
+    riseOnHover: true
+  }).addTo(map).on("click", () => openShop(i));
+  const el = marker.getElement();
+  el.setAttribute("aria-label", `${i + 1}: ${t.name}`);
+  // Leaflet only opens popups on Enter, so markers need their own key handling
+  el.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    openShop(i);
+  });
+  hoverLink(el, i);
+  markers.push(marker);
+  pins.push(el.firstChild);
+
+  const chip = document.createElement("button");
+  chip.className = "chip";
+  chip.dataset.reveal = "";
+  chip.style.setProperty("--i", i);
+  chip.innerHTML = `<b>${i + 1}</b>${t.name}`;
+  chip.addEventListener("click", () => openShop(i));
+  hoverLink(chip, i);
+  mapChips.appendChild(chip);
+  chips.push(chip);
+});
+
+// --- Shop view: docked beside the map (a bottom sheet on phones), one shop at a time.
+// The open shop lives in the URL hash, so Back/Forward and shared links work. ---
+const view = document.getElementById("shop-view");
+const viewBody = view.querySelector(".sv-body");
+const viewCount = view.querySelector(".sv-count");
+const viewLive = document.getElementById("shop-live");
+let cur = -1;
+
+function show(i, dir = 0) {
+  if (i === cur) return;
+  cur = i;
+  [pins, chips].forEach((list) => list.forEach((el, j) => el.classList.toggle("is-active", j === i)));
+  markers.forEach((m, j) => m.setZIndexOffset(j === i ? 1000 : 0));
+  mapLayout.classList.toggle("open", i >= 0);
+  view.hidden = i < 0;
+  if (i < 0) return;
+  const t = TRADES[i];
+  viewCount.textContent = `${pad(i + 1)} / ${pad(TRADES.length)}`;
+  viewLive.textContent = `${t.name}, shop ${i + 1} of ${TRADES.length}`;
+  viewBody.style.setProperty("--dx", dir * 32 + "px");
+  viewBody.style.setProperty("--dy", dir ? "0px" : "12px");
+  viewBody.innerHTML = shopHTML(t, i);
+  makeCompare(viewBody.querySelector(".photo"), { follow: true });
+  const z = Math.max(map.getZoom(), 18);
+  if (reduce) map.setView([t.lat, t.lng], z, { animate: false });
+  else map.flyTo([t.lat, t.lng], z, { duration: 0.8 });
+  // Keep the map and the shop on screen together
+  if (phone.matches) mapCard.scrollIntoView({ block: "start" });
+  else {
+    const r = mapLayout.getBoundingClientRect();
+    if (r.top < header.offsetHeight || r.bottom > innerHeight) mapLayout.scrollIntoView({ block: "center" });
+  }
+}
+function openShop(i) {
+  if (i === cur) return;
+  history.pushState(null, "", "#" + TRADES[i].id);
+  show(i);
+}
+function stepShop(d) {
+  const i = (cur + d + TRADES.length) % TRADES.length;
+  history.replaceState(null, "", "#" + TRADES[i].id); // walking the street shouldn't fill the Back stack
+  show(i, d);
+}
+function closeShop() {
+  const was = cur, hadFocus = view.contains(document.activeElement);
+  history.pushState(null, "", location.pathname + location.search);
+  show(-1);
+  if (hadFocus) chips[was].focus({ preventScroll: true });
+}
+const fromHash = () => show(TRADES.findIndex((t) => "#" + t.id === location.hash));
+addEventListener("popstate", fromHash);
+addEventListener("hashchange", fromHash); // grid cards link here with plain #shop-id anchors
+addEventListener("keydown", (e) => { if (e.key === "Escape" && cur >= 0) closeShop(); });
+view.querySelector(".sv-back").addEventListener("click", closeShop);
+view.querySelector(".sv-prev").addEventListener("click", () => stepShop(-1));
+view.querySelector(".sv-next").addEventListener("click", () => stepShop(1));
+
+// --- Shop cards ---
+const shopGrid = document.getElementById("shop-grid");
+TRADES.forEach((t, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.dataset.reveal = "";
+  card.style.setProperty("--i", i % 2);
+  card.innerHTML = shopHTML(t, i, { mapLink: true });
   makeCompare(card.querySelector(".photo"), { follow: true });
   shopGrid.appendChild(card);
-  cards.push(card);
 });
 
 // --- Scroll reveals ---
@@ -556,7 +675,6 @@ document.querySelectorAll("[data-reveal], [data-in]").forEach((el) => io.observe
 
 // --- Scroll-linked effects, rAF-driven so they work regardless of scroll container ---
 const heroThen = document.getElementById("hero-then");
-const mapBg = document.getElementById("map-bg");
 const fill = document.querySelector(".fill span");
 const ko = document.querySelector(".ko");
 const progress = document.querySelector(".progress");
@@ -571,8 +689,6 @@ function tick() {
   if (!reduce) {
     let r = heroDrag.getBoundingClientRect();
     heroThen.style.transform = `translateY(${clamp(r.top * -0.12, -90, 90)}px)`;
-    r = mapBg.parentElement.getBoundingClientRect();
-    mapBg.style.transform = `translateY(${clamp(r.top * 0.05, -20, 20)}px)`;
     r = ko.getBoundingClientRect();
     ko.style.setProperty("--by", clamp(50 + (r.top / vh) * 60, 0, 100) + "%");
     r = fill.parentElement.getBoundingClientRect();
@@ -581,6 +697,7 @@ function tick() {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
+fromHash(); // open a shop linked to directly
 </script>
 </body>
 </html>
