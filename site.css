@@ -158,14 +158,14 @@ a:hover .roll > span, button:hover .roll > span, a:focus-visible .roll > span{tr
 .cap.then-cap{justify-content:flex-end;align-items:flex-start;background:linear-gradient(to bottom, rgba(20,15,10,0.6), transparent 45%);} /* opposite corner to Now, so long names never collide */
 .cap span{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--cream);font-weight:700;}
 .card .handle{width:42px;height:42px;margin:-21px 0 0 -21px;}
-.info{display:grid;grid-template-columns:auto 1fr;gap:6px 22px;padding:24px 26px 28px;}
+.info{display:grid;grid-template-columns:auto minmax(0, 1fr);gap:6px 22px;padding:24px 26px 28px;}
 .num{font-size:clamp(30px, calc(200px / var(--len, 2)), 72px);white-space:nowrap;line-height:.78;font-weight:800;letter-spacing:-0.04em;color:transparent;-webkit-text-stroke:1px var(--ink);transition:color .6s var(--ease), -webkit-text-stroke-color .6s var(--ease), transform .7s var(--ease);}
 .card:hover .num{color:var(--rust);-webkit-text-stroke-color:var(--rust);transform:translateY(-3px);}
 .card h3{font-size:26px;letter-spacing:-0.02em;}
 .card h3 span{background:linear-gradient(currentColor, currentColor) 0 100% / 0% 2px no-repeat;transition:background-size .7s var(--ease);}
 .card:hover h3 span{background-size:100% 2px;}
 .meta{font-size:12px;color:var(--stone);margin:0;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;}
-.txt{display:grid;gap:6px;align-content:start;justify-items:start;}
+.txt{display:grid;gap:6px;align-content:start;justify-items:start;min-width:0;overflow-wrap:anywhere;}
 .note{font-size:14px;line-height:1.55;margin:4px 0 0;}
 .more{justify-self:stretch;margin-top:6px;}
 .more > summary{display:inline-flex;align-items:center;gap:8px;list-style:none;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;min-height:32px;}
@@ -248,7 +248,7 @@ a:hover .roll > span, button:hover .roll > span, a:focus-visible .roll > span{tr
   .sv-body .photo{aspect-ratio:2/1;}
   .shop-view{position:sticky;bottom:0;z-index:5;max-height:56vh;max-height:56svh;margin:0 -20px;border-radius:16px 16px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,0.45);animation-name:sv-sheet;}
   @keyframes sv-sheet{from{transform:translateY(100%);}}
-  .shop-grid{grid-template-columns:1fr;}
+  .shop-grid{grid-template-columns:minmax(0, 1fr);}
   .num{font-size:clamp(26px, calc(150px / var(--len, 2)), 56px);}
 }
 @media (prefers-reduced-motion: reduce){
@@ -374,11 +374,28 @@ html:has(.full[open]){overflow:hidden;}
 /* Footer sources */
 .sources{margin:14px 0 0;padding:0 0 0 18px;columns:2;column-gap:40px;font-size:10px;line-height:1.6;color:#5a544a;}
 
-@media (max-width: 480px){
-  /* Four nav links overflow a phone and zoom the whole page out; the map is one swipe away anyway */
-  .nav a:first-child{display:none;}
-  .nav{gap:12px;font-size:10px;letter-spacing:0.06em;}
-  .top .wrap{gap:12px;}
+/* Phones: the four links fold into a menu. Inline they overflowed narrow screens and large text
+   settings, which zooms the whole page out. */
+.top .brand{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.menu-btn{flex:none;display:none;align-items:center;gap:8px;min-height:40px;padding:0 4px;border:0;background:none;color:inherit;font:inherit;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;}
+@media (max-width: 560px){
+  .menu-btn{display:inline-flex;}
+  .top .nav{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;padding:6px 20px 14px;font-size:13px;background:var(--cream);border-bottom:1px solid var(--line);box-shadow:0 12px 24px rgba(20,15,10,0.12);}
+  .top.dark .nav{background:var(--ink);border-color:var(--night-line);}
+  .top.menu-open .nav{display:flex;}
+  .top .nav a{padding:12px 0;border-top:1px solid var(--line);}
+  .top.dark .nav a{border-color:var(--night-line);}
+  .top .nav a:first-child{border-top:0;}
+}
+@media (max-width: 720px){
+  /* Timeline runs down the page on phones: the line on the left, a dot beside each year */
+  .tl{flex-direction:column;flex-wrap:nowrap;gap:22px;margin-top:32px;padding:0 0 0 28px;}
+  .tl::before{top:6px;bottom:6px;left:4px;right:auto;width:1px;height:auto;transform:scaleY(0);transform-origin:top;}
+  .tl.in::before{transform:none;}
+  .tl div::before, .tl div:last-child::before{top:8px;left:-28px;right:auto;}
+  .tl div:last-child{text-align:left;}
+  .tl div:last-child span{margin-left:0;}
+  .tl div span{max-width:none;font-size:13px;}
 }
 @media (max-width: 900px){
   .sections{grid-template-columns:repeat(2, minmax(0, 1fr));}

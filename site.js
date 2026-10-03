@@ -511,6 +511,15 @@ const TRADES = {
   "Post offices": /post office/, Hairdressers: /hair|barber/, Shoes: /boot|shoe|cobbler/
 };
 
+// --- Phone menu: the header's links fold behind a button below 560px ---
+const menuBtn = document.querySelector(".menu-btn");
+if (menuBtn) {
+  const setMenu = (open) => { header.classList.toggle("menu-open", open); menuBtn.setAttribute("aria-expanded", open); };
+  menuBtn.addEventListener("click", () => setMenu(!header.classList.contains("menu-open")));
+  header.querySelectorAll(".nav a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  addEventListener("keydown", (ev) => { if (ev.key === "Escape") setMenu(false); });
+}
+
 // --- Footer sources, numbered as the directory's footnotes ---
 const sourceList = document.getElementById("sources");
 if (sourceList) sourceList.innerHTML = Object.values(SOURCES).map((s) => `<li>${s}</li>`).join("");

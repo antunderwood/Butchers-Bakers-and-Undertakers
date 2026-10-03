@@ -235,3 +235,8 @@ cleared by the user.
   about ...? Email the BBU team" link with the address as the subject; on
   section pages prev/next run on into the neighbouring section; the card's
   close button says Close; favicon and link-preview tags (`img/og.jpg`).
+- **Phones**: below 560px the header links fold into a Menu button with a
+  solid dropdown (inline links overflowed narrow screens and large text
+  settings, zooming the page out); the timeline runs vertically with the
+  line on the left; card grid columns use `minmax(0, 1fr)` and long words
+  wrap, so nothing overflows a 320px screen.
