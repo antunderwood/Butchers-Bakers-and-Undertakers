@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Directory of Shops</title>
+<meta name="description" content="Every address in the Abbots Langley Local History Society's directory of High Street shops, with each one's occupants over time.">
+<script>document.documentElement.classList.add("js");</script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.4 0"/></filter>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">ABBOTS&nbsp;LANGLEY</a>
+    <nav class="nav">
+      <a href="#map"><span class="roll"><span>Map</span></span></a>
+      <a href="#shops"><span class="roll"><span>Shops</span></span></a>
+      <a href="index.html#directory"><span class="roll"><span>Directory</span></span></a>
+      <a href="#contribute"><span class="roll"><span>Contribute</span></span></a>
+    </nav>
+  </div>
+  <div class="progress"></div>
+</header>
+
+<main id="top">
+
+  <!-- SECTION HEADER -->
+  <section class="dir-head">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal><a href="index.html#directory">The directory</a> &middot; <span id="dir-count"></span> addresses</span>
+      <h1 id="dir-title" class="display" data-reveal></h1>
+      <p id="dir-sub" class="lede" data-reveal></p>
+      <nav id="dir-tabs" class="tabs" aria-label="Directory sections" data-reveal></nav>
+      <div id="dir-media"></div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section id="map" class="map-sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div data-reveal>
+          <span class="eyebrow">01 &middot; The map</span>
+          <h2 class="display h2">Walk the street</h2>
+        </div>
+        <span class="eyebrow" data-reveal>Tap a marker or a name. Houses and lost buildings have no marker</span>
+      </div>
+      <div id="map-layout" class="map-layout">
+        <div id="map-card" class="map-card" data-reveal>
+          <div id="leaflet" role="region" aria-label="Map of Abbots Langley High Street"></div>
+        </div>
+        <div id="map-chips" class="chips"></div>
+        <section id="shop-view" class="shop-view" aria-label="Shop details" hidden>
+          <div class="sv-bar">
+            <button class="sv-back" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="roll"><span>All shops</span></span>
+            </button>
+            <span class="sv-count"></span>
+            <button class="sv-step sv-prev" type="button" aria-label="Previous shop along the street">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="sv-step sv-next" type="button" aria-label="Next shop along the street">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <article class="card sv-body"></article>
+        </section>
+        <svg class="leader" aria-hidden="true"><line/><circle r="3"/></svg>
+      </div>
+      <span id="shop-live" class="sr" aria-live="polite"></span>
+      <p style="font-size:11px;color:var(--night-muted);letter-spacing:0.02em;margin-top:28px;">Map data &copy; OpenStreetMap contributors, ODbL. Markers show today's business at each address.</p>
+    </div>
+  </section>
+
+  <!-- ADDRESSES -->
+  <section id="shops" class="shops">
+    <div class="wrap">
+      <div class="sec-head">
+        <div data-reveal>
+          <span class="eyebrow">02 &middot; Every address</span>
+          <h2 class="display h2">Then &amp; now</h2>
+        </div>
+        <span class="eyebrow" data-reveal style="max-width:44ch;">Occupants newest first, as recorded in the Society's directory. Hover a footnote for its source</span>
+      </div>
+      <div id="shop-grid" class="shop-grid"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- CONTRIBUTE / FOOTER -->
+<footer id="contribute" class="foot">
+  <div class="wrap">
+    <span class="eyebrow" data-reveal style="color:var(--night-muted);">03 &middot; Contribute</span>
+    <h2 class="display ko" data-reveal style="margin-top:18px;">Have a photograph or a memory?</h2>
+    <p class="lede" data-reveal>
+      This project is built from what the village remembers. If you notice an error, or have a shopfront photo, a date, or a
+      memory to add, the Butchers, Bakers and Undertakers team at the Abbots Langley Local History Society would like to hear from you.
+    </p>
+    <div data-reveal style="margin-top:32px;">
+      <a class="btn btn-line" href="mailto:shops@allhs.org.uk"><span class="roll"><span>shops@allhs.org.uk</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+    <div class="legal">
+      <span>&copy; Abbots Langley Local History Society</span>
+      <span>Source: &ldquo;A Directory of Shops in Abbots Langley High Street&rdquo;, updated June 2026</span>
+    </div>
+    <p class="credits">
+      Shop histories from the directory by the BBU team: Simon Arbon, Jane Lay, Pam Rastall, Janet Sands, Richard Simons.
+      Shop photographs from the Abbots Langley Local History Society collection and Shady Firs Photography. Drawings by
+      Prue King, with permission. Old advertisements from back issues of St Lawrence Church magazines. Example hero
+      photography: High Street, Abbots Langley &copy; Diane Sambrook, CC BY-SA 2.0; street scenes (Martin Ridley
+      Collection), public domain; via Wikimedia Commons. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
+      Leaflet, BSD 2-Clause.
+    </p>
+    <p class="credits" style="margin-top:18px;">Footnotes refer to the directory's sources:</p>
+    <ol id="sources" class="sources"></ol>
+  </div>
+</footer>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="data/directory.js"></script>
+<script src="site.js"></script>
+<script>
+// One page per directory section, chosen by ?g=
+const g = GROUPS[new URLSearchParams(location.search).get("g")] ? new URLSearchParams(location.search).get("g") : "odd";
+const sec = GROUPS[g], shops = DIRECTORY.filter((e) => e.group === g);
+document.title = `${sec.title} · Directory of Shops`;
+document.getElementById("dir-title").textContent = sec.title;
+document.getElementById("dir-sub").textContent = sec.sub;
+document.getElementById("dir-count").textContent = shops.length;
+document.getElementById("dir-tabs").innerHTML = Object.entries(GROUPS).map(([k, s]) =>
+  `<a href="directory.html?g=${k}"${k === g ? ' aria-current="page"' : ""}>${s.title} <b>${DIRECTORY.filter((e) => e.group === k).length}</b></a>`).join("");
+if (sec.photos) {
+  const media = document.getElementById("dir-media");
+  media.className = "group-media";
+  media.dataset.reveal = "";
+  media.innerHTML = photoHTML(sec.photos, sec.title) + (sec.extras || []).map(([src, cap]) =>
+    `<figure><img src="${src}" alt="${cap}"/><figcaption>${cap}</figcaption></figure>`).join("");
+  makeCompare(media.querySelector(".compare"), { follow: true });
+}
+initStreet(shops);
+</script>
+</body>
+</html>

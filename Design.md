@@ -40,8 +40,9 @@ type, minimal colour, no hand-drawn motifs. This is the current direction.
 
 ## Content honesty
 
-No historical photographs or confirmed shop records exist for this project
-yet (the source page is a project announcement, not a populated directory).
+*Superseded for `index.html` by "Directory of Shops content" below; still
+true of `Main.dc.html`.* No historical photographs or confirmed shop records
+existed for this project at first (the source page is a project announcement, not a populated directory).
 Rather than fabricate specific facts, the page:
 
 - Labels every historical trade as **"trade unconfirmed"**.
@@ -164,3 +165,39 @@ Helvetica Neue until it is republished with the font.
   canvas bundle still has the old static map until it is republished.
 - OSM tags Pin Wei as `disused:amenity=restaurant`, so it may have closed.
   Ansells is a bookmaker in OSM (it was listed as a florist before).
+
+## Directory of Shops content (index.html, Oct 2026)
+
+The site now carries the Society's own "A Directory of Shops in Abbots
+Langley High Street" (BBU team, updated June 2026), supplied by the user as
+a PDF, with web use of its photographs, adverts and Prue King's drawings
+cleared by the user.
+
+- **Files**: the page code is split for reuse. `site.css` and `site.js` are
+  shared, `data/directory.js` holds every entry (74, transcribed from the
+  PDF, footnotes kept as `{n}` and shown as superscripts naming the source),
+  `img/directory/` holds the images. `index.html` is the front page and
+  `directory.html?g=odd|langley|even|causeway` serves the four sections.
+- **Front page**: at most 10 `featured` entries, chosen for having a
+  then/now photo pair and a long timeline, walked north to south. The
+  directory pair printed above no. 22 actually shows no. 20 ("Abbots Langley
+  Supply Stores"), so 20 Noor Mahal is featured, not 22-26.
+- **Sub-pages**: one per directory section (odd numbers, Langley Parade,
+  even numbers, Causeway Parade) with the same map, panel and cards. Every
+  entry appears on its section page, featured or not. Houses and lost
+  buildings have no map marker but still open in the panel.
+- **Entries**: neighbouring numbers the directory treats together, or that
+  share one photo or OSM element, are merged with sub-headings (2 & 4,
+  22-26, 30 & 32, 38 & 38a, 39 & 41). Cards show the first three occupants;
+  the rest, adverts and drawings sit under Read more.
+- **Text**: as the directory, including living proprietors' and residents'
+  names (the user's choice), except that its dashes are written as commas
+  or colons. Marker positions come from OpenStreetMap; no. 16 is still
+  "Your Move" in OSM.
+- **Images**: extracted by rendering each region of the PDF at its source
+  resolution. Then/now photos are all 960x720 (4:3, centre-cropped), adverts
+  and drawings fit within 800x800; all JPEG quality 80.
+- **Phone nav**: four header links overflowed a 390px screen and zoomed the
+  whole page out (which also broke scroll targets), so the Map link hides
+  below 480px.
+- `Main.dc.html` has not been given the directory content or sub-pages.
