@@ -201,3 +201,37 @@ cleared by the user.
   whole page out (which also broke scroll targets), so the Map link hides
   below 480px.
 - `Main.dc.html` has not been given the directory content or sub-pages.
+- **Full view**: the map card's expand button (and its Full details link)
+  opens the whole entry in a `<dialog>`: large then/now photo, every
+  occupant, adverts and drawings, and the sources written out, since title
+  tooltips on footnotes don't work on touch. URL `#full-<id>`, so Back
+  closes it and it can be shared; prev/next step inside it and keep the map
+  card behind in step; closing always lands on the shop's map view
+  (replaceState), so it never jumps back to the first shop. Full screen on
+  phones. On the front page the card and full view also link to the
+  shop's section page with it open (`directory.html?g=<section>#<id>`).
+
+## UX pass (Oct 2026)
+
+- **Finder**: a search box over all 74 entries and every occupant, plus
+  trade filters (butchers, bakers, undertakers, grocers, drapers, pubs,
+  banks, chemists, post offices, hairdressers, shoes) defined as regexes in
+  `TRADES` in `site.js`. Matches on the current page light up on the map
+  and filter the chips; the results list covers every section and opens
+  each entry's full view (on another section's page if needed). The search
+  is kept in the URL (`?q=` or `?t=`), so it survives Back and can be shared.
+- **Hero and claims**: the hero is now a real directory pair, Henderson Hall
+  and its neighbours then and now (`img/hero-*.jpg`, 1200x750), darkened in
+  the hero so the knockout headline stays legible. The intro and timeline
+  no longer claim Elizabethan origins: the directory's earliest dated trade
+  is the King's Head (1756), so the copy says that, and the timeline's
+  milestones are directory facts (1756, 1826, 1902, 1920s, 1958, 1982).
+- **Map clarity**: markers are shaded by side of the street (dark for odd
+  and Langley Parade, light for even and Causeway Parade) with a key where
+  both sides show; overlapping markers are nudged to the nearest free spot
+  with a stem and dot at their true position, recomputed on zoom; the front
+  page fits the central cluster, so no. 81 no longer zooms the view out.
+- **Polish**: each card's Read more and the full view carry a "Know more
+  about ...? Email the BBU team" link with the address as the subject; on
+  section pages prev/next run on into the neighbouring section; the card's
+  close button says Close; favicon and link-preview tags (`img/og.jpg`).

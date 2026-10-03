@@ -7,6 +7,12 @@
 <meta name="description" content="Every shop Abbots Langley High Street has known: then and now, from the Local History Society's directory of shops.">
 <script>document.documentElement.classList.add("js");</script>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Abbots Langley High Street">
+<meta property="og:description" content="Every shop the High Street has known, then and now, from the Local History Society's directory of shops.">
+<meta property="og:image" content="https://antunderwood.github.io/Butchers-Bakers-and-Undertakers/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="site.css">
 </head>
 <body>
@@ -34,13 +40,13 @@
   <section>
     <div id="hero-drag" class="hero-drag compare" tabindex="0" role="slider" aria-label="Compare the High Street then and now" aria-valuemin="0" aria-valuemax="100">
       <div class="hero-media">
-        <img id="hero-then" src="photo-vintage-highstreet.jpg" alt="A c. 1905 English high street (example photograph)" style="top:-12%;height:124%;object-position:center 60%;will-change:transform;"/>
+        <img id="hero-then" src="img/hero-then.jpg" alt="Henderson Hall and the High Street, early 20th century, with a horse and cart outside D.E. White's saddlery" style="top:-12%;height:124%;object-position:center 55%;will-change:transform;"/>
         <div class="grain"></div>
-        <img id="hero-now" class="now" src="photo-al-high-street.jpg" alt="Abbots Langley High Street today" style="top:0;height:100%;object-position:center 55%;"/>
+        <img id="hero-now" class="now" src="img/hero-now.jpg" alt="Henderson Hall and the High Street today" style="top:0;height:100%;object-position:center 55%;"/>
       </div>
       <div class="hero-shade"></div>
       <div class="hero-corner">
-        <span class="eyebrow" style="color:var(--cream);">High Street Archive &middot; Est. Elizabethan Era</span>
+        <span class="eyebrow" style="color:var(--cream);">High Street Archive &middot; Recorded since 1756</span>
         <span class="eyebrow hint" style="color:var(--cream);">
           <svg width="18" height="10" viewBox="0 0 24 12" fill="none" aria-hidden="true"><path d="M6 1L1 6L6 11M18 1L23 6L18 11M1 6H23" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Drag to compare
@@ -60,15 +66,15 @@
     </div>
     <div class="wrap hero-copy">
       <p class="lede">
-        Butchers, bakers, undertakers, drapers and grocers. Drag across the photograph above to slide the
-        High Street from its earliest recorded trade into what stands there today.
+        Butchers, bakers, undertakers, drapers and grocers. Drag across the photograph above to see
+        Henderson Hall and the High Street then and now.
       </p>
       <div>
         <a class="btn" href="#map"><span class="roll"><span>Explore the map</span></span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
-      <p class="fine">Above: example photographs, a c. 1905 English high street (public domain) and today's Abbots Langley High Street. The shop photographs further down are from the Society's directory.</p>
+      <p class="fine">Henderson Hall (built 1902) and its neighbours. Photographs from the Abbots Langley Local History Society collection and Shady Firs Photography, as printed in the Society's directory.</p>
     </div>
   </section>
 
@@ -76,9 +82,10 @@
   <section class="intro">
     <div class="wrap">
       <span class="eyebrow" data-reveal>01 &middot; About the project</span>
-      <p class="fill"><span>The first shop on this High Street traded in Elizabethan times. Since then, the same handful of
-        plots have carried butchers, bakers, ironmongers and undertakers through five centuries of
-        village life. This site collects what survives of that record, one shopfront at a time.</span></p>
+      <p class="fill"><span>The earliest trade in the Society's directory is the King's Head, recorded from 1756, and a
+        butcher was working at no. 17 before 1800. Since then the same plots have carried butchers, bakers,
+        ironmongers and undertakers through more than two centuries of village life. This site collects what
+        survives of that record, one shopfront at a time.</span></p>
     </div>
   </section>
 
@@ -92,6 +99,7 @@
         </div>
         <span class="eyebrow" data-reveal>Ten addresses with then-and-now photographs. Tap a marker or a name</span>
       </div>
+      <div id="finder" class="finder" data-reveal></div>
       <div id="map-layout" class="map-layout">
         <div id="map-card" class="map-card" data-reveal>
           <div id="leaflet" role="region" aria-label="Map of Abbots Langley High Street"></div>
@@ -101,9 +109,12 @@
           <div class="sv-bar">
             <button class="sv-back" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span class="roll"><span>All shops</span></span>
+              <span class="roll"><span>Close</span></span>
             </button>
             <span class="sv-count"></span>
+            <button class="sv-step sv-expand" type="button" aria-label="Show full details">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3H21V9M9 21H3V15M21 3L14 10M3 21L10 14"/></svg>
+            </button>
             <button class="sv-step sv-prev" type="button" aria-label="Previous shop along the street">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
@@ -159,14 +170,15 @@
   <!-- TIMELINE -->
   <section class="timeline">
     <div class="wrap">
-      <span class="eyebrow" data-reveal>05 &middot; Five centuries of change</span>
+      <span class="eyebrow" data-reveal>05 &middot; Two and a half centuries of change</span>
       <div class="tl" data-in>
-        <div>Elizabethan</div>
-        <div>1900s</div>
-        <div>1940s</div>
-        <div>1970s</div>
-        <div>2000s</div>
-        <div>Today</div>
+        <div><b>1756</b><span>The King's Head is recorded at no. 35</span></div>
+        <div><b>1826</b><span>Simons, butchers, open at no. 17, trading until 1974</span></div>
+        <div><b>1902</b><span>Henderson Hall is built</span></div>
+        <div><b>1920s</b><span>Shops built at nos. 39 to 53 on Busby's builder's yard</span></div>
+        <div><b>1958</b><span>Causeway Parade is built</span></div>
+        <div><b>1982</b><span>The Library opens at nos. 2 and 4</span></div>
+        <div><b>Today</b><span>74 addresses in the directory</span></div>
       </div>
     </div>
   </section>
@@ -194,9 +206,7 @@
     <p class="credits">
       Shop histories from the directory by the BBU team: Simon Arbon, Jane Lay, Pam Rastall, Janet Sands, Richard Simons.
       Shop photographs from the Abbots Langley Local History Society collection and Shady Firs Photography. Drawings by
-      Prue King, with permission. Old advertisements from back issues of St Lawrence Church magazines. Example hero
-      photography: High Street, Abbots Langley &copy; Diane Sambrook, CC BY-SA 2.0; street scenes (Martin Ridley
-      Collection), public domain; via Wikimedia Commons. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
+      Prue King, with permission. Old advertisements from back issues of St Lawrence Church magazines. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
       Leaflet, BSD 2-Clause.
     </p>
     <p class="credits" style="margin-top:18px;">Footnotes refer to the directory's sources:</p>
@@ -216,7 +226,7 @@ document.getElementById("sections").innerHTML = Object.entries(GROUPS).map(([g, 
     <p>${sec.sub}</p>
     <span class="go"><span class="roll"><span>Open section</span></span></span>
   </a>`).join("");
-initStreet(DIRECTORY.filter((e) => e.featured).sort((a, b) => b.lat - a.lat));
+initStreet(DIRECTORY.filter((e) => e.featured).sort((a, b) => b.lat - a.lat), { linkSections: true, fitCore: true });
 </script>
 </body>
 </html>

@@ -8,7 +8,9 @@ const pad = (n) => String(n).padStart(2, "0");
 const header = document.querySelector(".top");
 const ARROW = {
   up: '<path d="M12 19V5M6 11L12 5L18 11"/>', down: '<path d="M12 5V19M6 13L12 19L18 13"/>',
-  chevron: '<path d="M6 9L12 15L18 9"/>', drag: '<path d="M8 6L2 12L8 18M16 6L22 12L16 18"/>'
+  chevron: '<path d="M6 9L12 15L18 9"/>', drag: '<path d="M8 6L2 12L8 18M16 6L22 12L16 18"/>',
+  expand: '<path d="M15 3H21V9M9 21H3V15M21 3L14 10M3 21L10 14"/>', close: '<path d="M18 6L6 18M6 6L18 18"/>',
+  out: '<path d="M7 17L17 7M9 7H17V15"/>', search: '<circle cx="11" cy="11" r="7"/><path d="M20 20L16 16"/>'
 };
 const icon = (name, size = 12) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ARROW[name]}</svg>`;
 
@@ -67,6 +69,8 @@ function makeCompare(el, { follow = false } = {}) {
 const plainName = (e) => e.name.replace(/\s*\{[\d,]+\}/g, "");
 const shortName = (e) => plainName(e).replace(/\s*\(.*?\)/g, "").trim();
 const pinLabel = (e) => e.pin || e.no;
+// Odd numbers and Langley Parade are the south-east side; even numbers and Causeway Parade the north-west
+const side = (e) => (e.group === "even" || e.group === "causeway" ? "nw" : "se");
 function address(e) {
   if (e.group === "langley") return `${e.no} Langley Parade`;
   return (e.no ? e.no + " " : "") + "High Street" + (e.group === "causeway" ? ", Causeway Parade" : "");
@@ -123,11 +127,29 @@ function infoHTML(e, body) {
     </div>`;
 }
 const list = (lines) => lines.length ? `<ol class="hist">${lines.map(lineHTML).join("")}</ol>` : "";
+const tellUs = (e) => `<a class="to-tell" href="mailto:shops@allhs.org.uk?subject=${encodeURIComponent(`${address(e)}, ${shortName(e)}`)}">Know more about ${address(e)}? Email the BBU team</a>`;
+// On the front page, an entry links to its directory section with it already open
+let linkSections = false;
+function sectionLink(e) {
+  if (!linkSections) return "";
+  const n = DIRECTORY.filter((d) => d.group === e.group).length;
+  return `<a class="to-section" href="directory.html?g=${e.group}#${e.id}"><span class="roll"><span>See it among all ${n} in ${GROUPS[e.group].title}</span></span>${icon("out")}</a>`;
+}
 function briefHTML(e) {
-  const [shown, rest] = splitLines(e.lines);
-  const more = rest.length || e.extras || e.description;
-  return photoHTML(e.photos, shortName(e)) + infoHTML(e, list(shown) + (more ? `
-    <a class="to-card" href="#about-${e.id}"><span class="roll"><span>Read more</span></span>${icon("down")}</a>` : ""));
+  const [shown] = splitLines(e.lines);
+  return photoHTML(e.photos, shortName(e)) + infoHTML(e, list(shown) + `
+    <button class="to-card sv-full" type="button"><span class="roll"><span>Full details</span></span>${icon("expand")}</button>
+    ${sectionLink(e)}`);
+}
+// The full view: the whole entry at size, with its sources written out (title tooltips don't work on touch)
+function fullHTML(e) {
+  const used = [...new Set([e.name, ...e.lines].join(" ").match(/\{[\d,]+\}/g)?.join(",").match(/\d+/g) || [])].sort((a, b) => a - b);
+  const media = photoHTML(e.photos, shortName(e)) + extrasHTML(e.extras);
+  return `<div class="fl-grid${media ? "" : " text-only"}">
+    ${media ? `<div class="fl-media">${media}</div>` : ""}
+    <div class="fl-text">${infoHTML(e, (e.description ? `<div class="desc">${paras(e.description)}</div>` : "") + list(e.lines) +
+      (used.length ? `<p class="fl-src">Sources: ${used.map((n) => `<sup>${n}</sup>&nbsp;${SOURCES[n]}`).join("; ")}</p>` : "") + tellUs(e) + "<br>" + sectionLink(e))}</div>
+  </div>`;
 }
 function cardHTML(e) {
   const [shown, rest] = splitLines(e.lines);
@@ -135,7 +157,7 @@ function cardHTML(e) {
   return photoHTML(e.photos, shortName(e)) + infoHTML(e, list(shown) + (more ? `
     <details class="more">
       <summary><span class="lbl">Read more</span><span class="less">Read less</span>${icon("chevron")}</summary>
-      <div class="desc">${e.description ? paras(e.description) : ""}${list(rest)}${extrasHTML(e.extras)}</div>
+      <div class="desc">${e.description ? paras(e.description) : ""}${list(rest)}${extrasHTML(e.extras)}${tellUs(e)}</div>
     </details>` : "") + (e.lat ? `
     <a class="to-map" href="#${e.id}"><span class="roll"><span>Show on map</span></span>${icon("up")}</a>` : ""));
 }
@@ -150,7 +172,8 @@ function revealNow(el) {
 
 // --- The street: map, chips, shop panel and cards for the given entries ---
 let drawLeader = () => {};
-function initStreet(shops) {
+function initStreet(shops, opts = {}) {
+  linkSections = !!opts.linkSections;
   const mapLayout = document.getElementById("map-layout");
   const mapCard = document.getElementById("map-card");
   const mapChips = document.getElementById("map-chips");
@@ -163,7 +186,21 @@ function initStreet(shops) {
     dragging: !L.Browser.mobile, // on phones one finger scrolls the page, two fingers move the map
     minZoom: 15
   });
-  map.fitBounds(mapped.map((e) => [e.lat, e.lng]), { padding: [32, 32], maxZoom: 18 });
+  // Front page: fit the cluster, not the outliers (no. 81 at the far south would zoom everything out
+  // until the central shops overlap); outliers are a pan away and their chips still fly there
+  let core = mapped;
+  if (opts.fitCore && mapped.length > 3) {
+    const mid = (k) => mapped.map((e) => e[k]).sort((a, b) => a - b)[mapped.length >> 1];
+    const c = L.latLng(mid("lat"), mid("lng"));
+    const d = mapped.map((e) => c.distanceTo([e.lat, e.lng]));
+    const lim = Math.max(60, 2.5 * [...d].sort((a, b) => a - b)[d.length >> 1]);
+    core = mapped.filter((e, i) => d[i] <= lim);
+  }
+  const home = L.latLngBounds(core.map((e) => [e.lat, e.lng]));
+  map.fitBounds(home, { padding: [32, 32], maxZoom: 18 });
+  if (new Set(mapped.map(side)).size > 1) {
+    mapCard.insertAdjacentHTML("beforeend", '<div class="map-key" aria-hidden="true"><span><i></i>Odd numbers, south-east side</span><span><i class="nw"></i>Even numbers, north-west side</span></div>');
+  }
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -182,7 +219,7 @@ function initStreet(shops) {
   shops.forEach((e, i) => {
     if (e.lat) {
       const marker = L.marker([e.lat, e.lng], {
-        icon: L.divIcon({ className: "pin-wrap", html: `<span class="pin">${pinLabel(e)}</span>`, iconSize: [28, 28] }),
+        icon: L.divIcon({ className: "pin-wrap", html: `<span class="pin side-${side(e)}">${pinLabel(e)}</span>`, iconSize: [28, 28] }),
         riseOnHover: true
       }).addTo(map).on("click", () => openShop(i));
       const el = marker.getElement();
@@ -208,6 +245,26 @@ function initStreet(shops) {
     chips[i] = chip;
   });
 
+  // Neighbouring shopfronts are metres apart, so their markers overlap at street zoom. Nudge each
+  // marker that collides to the nearest free spot, with a stem and dot marking its true position.
+  const SPOTS = [[0, 0], [0, -30], [0, 30], [30, 0], [-30, 0], [26, -26], [-26, -26], [26, 26], [-26, 26], [0, -58], [0, 58], [58, 0], [-58, 0]];
+  function declutter() {
+    const placed = [];
+    markers.forEach((m, i) => {
+      if (!m) return;
+      const pt = map.latLngToContainerPoint(m.getLatLng());
+      const [dx, dy] = SPOTS.find(([x, y]) => placed.every((q) => Math.hypot(pt.x + x - q.x, pt.y + y - q.y) > 27)) || [0, 0];
+      placed.push({ x: pt.x + dx, y: pt.y + dy });
+      pins[i].style.translate = dx || dy ? `${dx}px ${dy}px` : "";
+      const wrap = m.getElement();
+      wrap.classList.toggle("moved", !!(dx || dy));
+      wrap.style.setProperty("--sl", Math.hypot(dx, dy) - 12 + "px");
+      wrap.style.setProperty("--sa", Math.atan2(dy, dx) + "rad");
+    });
+  }
+  map.on("zoomend", declutter);
+  declutter();
+
   // Shop view: docked beside the map (a bottom sheet on phones), one shop at a time.
   // The open shop lives in the URL hash, so Back/Forward and shared links work.
   const view = document.getElementById("shop-view");
@@ -215,6 +272,45 @@ function initStreet(shops) {
   const viewCount = view.querySelector(".sv-count");
   const viewLive = document.getElementById("shop-live");
   let cur = -1;
+  const full = document.createElement("dialog");
+  full.className = "full";
+  full.innerHTML = `
+    <div class="sv-bar">
+      <button class="sv-back fl-close" type="button">${icon("close", 14)}<span class="roll"><span>Back to map</span></span></button>
+      <span class="sv-count"></span>
+      <button class="sv-step fl-prev" type="button" aria-label="Previous shop along the street">${icon("chevron", 14).replace("M6 9L12 15L18 9", "M15 6L9 12L15 18")}</button>
+      <button class="sv-step fl-next" type="button" aria-label="Next shop along the street">${icon("chevron", 14).replace("M6 9L12 15L18 9", "M9 6L15 12L9 18")}</button>
+    </div>
+    <div class="fl-body"></div>`;
+  document.body.append(full);
+  const fullBody = full.querySelector(".fl-body");
+  function renderFull(dir = 0) {
+    const e = shops[cur];
+    full.setAttribute("aria-label", `${address(e)}, ${shortName(e)}`);
+    full.querySelector(".sv-count").textContent = `${pad(cur + 1)} / ${pad(shops.length)}`;
+    fullBody.style.setProperty("--dx", dir * 32 + "px");
+    fullBody.innerHTML = fullHTML(e);
+    fullBody.scrollTop = 0;
+    const photo = fullBody.querySelector(".compare");
+    if (photo) makeCompare(photo);
+  }
+  function openFull() {
+    history.pushState(null, "", "#full-" + shops[cur].id); // Back closes it, and the view can be shared
+    renderFull();
+    full.showModal();
+  }
+  // However it closes (button, Esc, backdrop), land on the shop's map view rather than going back,
+  // so closing after stepping to another shop doesn't jump the map back to the first one
+  full.addEventListener("close", () => {
+    if (location.hash.startsWith("#full-")) history.replaceState(null, "", "#" + shops[cur].id);
+  });
+  full.addEventListener("click", (ev) => { if (ev.target === full) full.close(); });
+  full.querySelector(".fl-close").addEventListener("click", () => full.close());
+  full.querySelector(".fl-prev").addEventListener("click", () => stepShop(-1));
+  full.querySelector(".fl-next").addEventListener("click", () => stepShop(1));
+  view.querySelector(".sv-expand").addEventListener("click", openFull);
+  viewBody.addEventListener("click", (ev) => { if (ev.target.closest(".sv-full")) openFull(); });
+
   function show(i, dir = 0) {
     if (i === cur) return;
     cur = i;
@@ -280,9 +376,16 @@ function initStreet(shops) {
     show(i);
   }
   function stepShop(d) {
+    if (opts.section && (cur + d < 0 || cur + d >= shops.length)) {
+      const keys = Object.keys(GROUPS), k = keys[(keys.indexOf(opts.section) + d + keys.length) % keys.length];
+      const next = DIRECTORY.filter((e) => e.group === k).at(d > 0 ? 0 : -1);
+      location.href = `directory.html?g=${k}#${full.open ? "full-" : ""}${next.id}`;
+      return;
+    }
     const i = (cur + d + shops.length) % shops.length;
-    history.replaceState(null, "", "#" + shops[i].id); // walking the street shouldn't fill the Back stack
+    history.replaceState(null, "", "#" + (full.open ? "full-" : "") + shops[i].id); // walking the street shouldn't fill the Back stack
     show(i, d);
+    if (full.open) renderFull(d);
   }
   function closeShop() {
     const was = cur, hadFocus = view.contains(document.activeElement);
@@ -291,7 +394,13 @@ function initStreet(shops) {
     if (hadFocus) chips[was].focus({ preventScroll: true });
   }
   function fromHash() {
-    show(shops.findIndex((e) => "#" + e.id === location.hash));
+    const wantFull = location.hash.startsWith("#full-");
+    const id = wantFull ? "#" + location.hash.slice(6) : location.hash;
+    show(shops.findIndex((e) => "#" + e.id === id));
+    if (wantFull && cur >= 0) {
+      renderFull();
+      if (!full.open) full.showModal();
+    } else if (full.open) full.close();
     const about = location.hash.startsWith("#about-") && document.getElementById(location.hash.slice(1));
     if (!about) return;
     // Read more on the map card lands on the full history. Scroll after closing the
@@ -303,7 +412,7 @@ function initStreet(shops) {
   }
   addEventListener("popstate", fromHash);
   addEventListener("hashchange", fromHash); // plain anchors: #shop-id opens it on the map, #about-shop-id jumps to its card
-  addEventListener("keydown", (ev) => { if (ev.key === "Escape" && cur >= 0) closeShop(); });
+  addEventListener("keydown", (ev) => { if (ev.key === "Escape" && cur >= 0 && !full.open) closeShop(); }); // Esc in the full view only closes that
   view.querySelector(".sv-back").addEventListener("click", closeShop);
   view.querySelector(".sv-prev").addEventListener("click", () => stepShop(-1));
   view.querySelector(".sv-next").addEventListener("click", () => stepShop(1));
@@ -322,9 +431,85 @@ function initStreet(shops) {
     shopGrid.appendChild(card);
   });
 
+  initFinder();
   startEffects();
   fromHash(); // open a shop linked to directly
+
+  // Finder: search every entry and occupant in the directory, or filter by trade. Matches on this
+  // page light up on the map and in the chips; the results list covers every section.
+  function initFinder() {
+    const box = document.getElementById("finder");
+    if (!box) return;
+    box.innerHTML = `
+      <label class="finder-box">${icon("search", 18)}
+        <input type="search" placeholder="Search ${DIRECTORY.length} addresses and every past occupant: a name, a trade, a year" autocomplete="off" aria-label="Search the directory">
+      </label>
+      <div class="trades" role="group" aria-label="Filter by trade">${Object.keys(TRADES).map((t) => `<button type="button" aria-pressed="false">${t}</button>`).join("")}</div>
+      <p class="finder-sum" aria-live="polite"></p>
+      <ol class="finder-results"></ol>`;
+    const input = box.querySelector("input"), sum = box.querySelector(".finder-sum"), results = box.querySelector(".finder-results");
+    const buttons = [...box.querySelectorAll(".trades button")];
+    const norm = (t) => t.replace(/\s*\{[\d,]+\}/g, "").replace(/[\u2018\u2019]/g, "'").toLowerCase();
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const params = new URLSearchParams(location.search);
+    let trade = TRADES[params.get("t")] ? params.get("t") : "";
+    input.value = params.get("q") || "";
+
+    function apply() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      buttons.forEach((b) => b.setAttribute("aria-pressed", b.textContent === trade));
+      const active = !!(trade || words.length);
+      const re = trade ? TRADES[trade] : words.length ? new RegExp(esc(words[0])) : null;
+      const hits = !active ? [] : DIRECTORY.flatMap((e) => {
+        const texts = [e.name, ...e.lines].map(norm);
+        if (!trade && !words.every((w) => texts.some((t) => t.includes(w)))) return [];
+        const k = texts.findIndex((t) => re.test(t));
+        return k < 0 ? [] : [{ e, line: [e.name, ...e.lines][k].replace(/^[#~] /, "") }];
+      });
+      const here = new Set(hits.map((h) => shops.indexOf(h.e)).filter((i) => i >= 0));
+      mapLayout.classList.toggle("filtering", active);
+      pins.forEach((pin, i) => pin?.classList.toggle("match", here.has(i)));
+      chips.forEach((chip, i) => { chip.hidden = active && !here.has(i); });
+      const hitMapped = shops.filter((e, i) => here.has(i) && e.lat);
+      if (cur < 0) {
+        const b = hitMapped.length ? L.latLngBounds(hitMapped.map((e) => [e.lat, e.lng])) : home;
+        if (reduce) map.fitBounds(b, { padding: [48, 48], maxZoom: 18 });
+        else map.flyToBounds(b, { padding: [48, 48], maxZoom: 18, duration: 0.8 });
+      }
+      const label = trade || `\u201c${input.value.trim()}\u201d`;
+      sum.innerHTML = !active ? "" : `${hits.length || "No"} address${hits.length === 1 ? "" : "es"} for ${label}` +
+        (hits.length ? `, ${here.size} on this map` : "") + ' <button type="button">Clear</button>';
+      // Snippets drop footnotes, so the highlight can only land in the occupant text
+      const hl = (line) => line.replace(/\s*\{[\d,]+\}/g, "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
+        .replace(new RegExp(trade ? TRADES[trade].source : esc(words[0] || ""), "gi"), (m) => m ? `<mark>${m}</mark>` : m);
+      const q = new URLSearchParams(trade ? { t: trade } : { q: input.value.trim() });
+      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?g=${e.group}&${q}`}#full-${e.id}">
+        <b>${e.no || "\u00b7"}</b><span class="r-name">${shortName(e)}</span><span class="r-sec">${GROUPS[e.group].title}</span>
+        <span class="r-line">${hl(line)}</span></a></li>`).join("");
+      // Keep the search in the address bar, so it survives Back and can be shared
+      const url = new URL(location.href);
+      ["q", "t"].forEach((k) => url.searchParams.delete(k));
+      if (active) q.forEach((v, k) => url.searchParams.set(k, v));
+      history.replaceState(null, "", url);
+    }
+    let timer;
+    input.addEventListener("input", () => { trade = ""; clearTimeout(timer); timer = setTimeout(apply, 180); });
+    input.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" && (input.value || trade)) { ev.stopPropagation(); input.value = ""; trade = ""; apply(); }
+    });
+    buttons.forEach((b) => b.addEventListener("click", () => { trade = trade === b.textContent ? "" : b.textContent; input.value = ""; apply(); }));
+    sum.addEventListener("click", (ev) => { if (ev.target.closest("button")) { input.value = ""; trade = ""; apply(); } });
+    if (trade || input.value) apply();
+  }
 }
+
+// Trade filters for the finder, matched against each entry's name and occupants
+const TRADES = {
+  Butchers: /butcher|meat/, Bakers: /baker|bakery|bread/, Undertakers: /undertaker|funeral/,
+  Grocers: /grocer|provision|supply stores|supermarket|fruiterer/, Drapers: /draper|outfitter|haberdash|clothing|boutique/,
+  Pubs: /public house|\bph\b|beer seller|arms\b/, Banks: /\bbank\b/, Chemists: /chemist|pharmac/,
+  "Post offices": /post office/, Hairdressers: /hair|barber/, Shoes: /boot|shoe|cobbler/
+};
 
 // --- Footer sources, numbered as the directory's footnotes ---
 const sourceList = document.getElementById("sources");

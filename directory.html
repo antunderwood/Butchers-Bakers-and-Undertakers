@@ -7,6 +7,12 @@
 <meta name="description" content="Every address in the Abbots Langley Local History Society's directory of High Street shops, with each one's occupants over time.">
 <script>document.documentElement.classList.add("js");</script>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Directory of Shops, Abbots Langley High Street">
+<meta property="og:description" content="Every address in the Abbots Langley Local History Society's directory of High Street shops, with each one's occupants over time.">
+<meta property="og:image" content="https://antunderwood.github.io/Butchers-Bakers-and-Undertakers/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="site.css">
 </head>
 <body>
@@ -51,6 +57,7 @@
         </div>
         <span class="eyebrow" data-reveal>Tap a marker or a name. Houses and lost buildings have no marker</span>
       </div>
+      <div id="finder" class="finder" data-reveal></div>
       <div id="map-layout" class="map-layout">
         <div id="map-card" class="map-card" data-reveal>
           <div id="leaflet" role="region" aria-label="Map of Abbots Langley High Street"></div>
@@ -60,9 +67,12 @@
           <div class="sv-bar">
             <button class="sv-back" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span class="roll"><span>All shops</span></span>
+              <span class="roll"><span>Close</span></span>
             </button>
             <span class="sv-count"></span>
+            <button class="sv-step sv-expand" type="button" aria-label="Show full details">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3H21V9M9 21H3V15M21 3L14 10M3 21L10 14"/></svg>
+            </button>
             <button class="sv-step sv-prev" type="button" aria-label="Previous shop along the street">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
@@ -116,9 +126,7 @@
     <p class="credits">
       Shop histories from the directory by the BBU team: Simon Arbon, Jane Lay, Pam Rastall, Janet Sands, Richard Simons.
       Shop photographs from the Abbots Langley Local History Society collection and Shady Firs Photography. Drawings by
-      Prue King, with permission. Old advertisements from back issues of St Lawrence Church magazines. Example hero
-      photography: High Street, Abbots Langley &copy; Diane Sambrook, CC BY-SA 2.0; street scenes (Martin Ridley
-      Collection), public domain; via Wikimedia Commons. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
+      Prue King, with permission. Old advertisements from back issues of St Lawrence Church magazines. Map data &copy; OpenStreetMap contributors, ODbL. Map library:
       Leaflet, BSD 2-Clause.
     </p>
     <p class="credits" style="margin-top:18px;">Footnotes refer to the directory's sources:</p>
@@ -147,7 +155,7 @@ if (sec.photos) {
     `<figure><img src="${src}" alt="${cap}"/><figcaption>${cap}</figcaption></figure>`).join("");
   makeCompare(media.querySelector(".compare"), { follow: true });
 }
-initStreet(shops);
+initStreet(shops, { section: g });
 </script>
 </body>
 </html>
