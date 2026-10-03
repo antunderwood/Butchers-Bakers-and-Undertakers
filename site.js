@@ -114,7 +114,6 @@ function photoHTML(photos, label) {
       <div class="cap then-cap"><span>Then</span></div>
       <img class="now" src="${photos[1]}" alt="${label} today"/>
       <div class="cap now"><span>Now &middot; ${label}</span></div>
-      <div class="grain"></div>
       <div class="divider"></div>
       <div class="handle">${icon("drag")}</div>
     </div>`;
@@ -298,7 +297,7 @@ function initStreet(shops, opts = {}) {
     fullBody.innerHTML = fullHTML(e);
     fullBody.scrollTop = 0;
     const photo = fullBody.querySelector(".compare");
-    if (photo) makeCompare(photo);
+    if (photo) makeCompare(photo, { follow: true }); // same as the cards: the mouse alone moves it
   }
   function openFull() {
     history.pushState(null, "", "#full-" + shops[cur].id); // Back closes it, and the view can be shared
@@ -572,6 +571,9 @@ function startEffects() {
   const progress = document.querySelector(".progress");
   const darkSecs = [...document.querySelectorAll(".map-sec, .foot")];
   function tick() {
+    // While a full view is open the page behind is inert: skip its per-frame work, so the blurred
+    // backdrop isn't recomposited every frame under the slider being dragged
+    if (document.querySelector("dialog[open]")) return requestAnimationFrame(tick);
     const vh = innerHeight;
     const de = document.documentElement;
     progress.style.transform = `scaleX(${de.scrollTop / Math.max(1, de.scrollHeight - vh)})`;

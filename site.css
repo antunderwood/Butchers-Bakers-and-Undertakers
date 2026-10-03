@@ -55,7 +55,7 @@ a:hover .roll > span, button:hover .roll > span, a:focus-visible .roll > span{tr
 .btn-line:hover, .btn-line:focus-visible{color:var(--ink);}
 
 /* COMPARISON SLIDER (hero + cards) */
-.compare{cursor:ew-resize;touch-action:pan-y;}
+.compare{cursor:ew-resize;touch-action:pan-y;-webkit-user-select:none;user-select:none;}
 .divider{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--cream);pointer-events:none;box-shadow:0 0 14px rgba(20,15,10,0.35);}
 .handle{position:absolute;top:50%;left:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;border:1.5px solid var(--cream);color:var(--cream);display:grid;place-items:center;pointer-events:none;background:rgba(20,15,10,0.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform .55s var(--ease), background .3s, color .3s;}
 .compare:hover .handle{transform:scale(1.14);}
