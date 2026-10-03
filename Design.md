@@ -177,7 +177,7 @@ cleared by the user.
   shared, `data/directory.js` holds every entry (74, transcribed from the
   PDF, footnotes kept as `{n}` and shown as superscripts naming the source),
   `img/directory/` holds the images. `index.html` is the front page and
-  `directory.html?g=odd|langley|even|causeway` serves the four sections.
+  `directory.html?section=<key>` serves the four sections.
 - **Front page**: at most 10 `featured` entries, chosen for having a
   then/now photo pair and a long timeline, walked north to south. The
   directory pair printed above no. 22 actually shows no. 20 ("Abbots Langley
@@ -209,7 +209,7 @@ cleared by the user.
   card behind in step; closing always lands on the shop's map view
   (replaceState), so it never jumps back to the first shop. Full screen on
   phones. On the front page the card and full view also link to the
-  shop's section page with it open (`directory.html?g=<section>#<id>`).
+  shop's section page with it open (`directory.html?section=<key>#<id>`).
 
 ## UX pass (Oct 2026)
 
@@ -240,3 +240,21 @@ cleared by the user.
   settings, zooming the page out); the timeline runs vertically with the
   line on the left; card grid columns use `minmax(0, 1fr)` and long words
   wrap, so nothing overflows a 320px screen.
+
+## Sections by side of the street (Oct 2026)
+
+Counts styled like house numbers (big outlined 39, 8, 19, 8 on the section
+tiles, counts on the tabs, a "10 / 39" position on the map card) were being
+read as addresses. Now only house numbers look like house numbers:
+
+- Sections are named and arranged by side: "High Street, south side" (the
+  odd numbers, the directory's south-east side) with Langley Parade, and
+  "High Street, north side" (even numbers) with Causeway Parade. The front
+  page shows two columns, one per side, each tile led by its address range
+  ("Nos. 1 to 87") with the count in words beneath.
+- Directory tabs are grouped under South side and North side, named by
+  place, with no counts. Every address reads with its side, e.g. "17 High
+  Street, south side".
+- The map card shows the section name where it showed a position.
+- Links name the section: `directory.html?section=south-side|langley-parade|north-side|causeway-parade`,
+  plus `#<shop>` or `#full-<shop>` and an optional `&q=`/`&t=` search.

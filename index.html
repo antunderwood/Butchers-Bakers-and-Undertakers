@@ -156,7 +156,7 @@
           <span class="eyebrow">04 &middot; The directory</span>
           <h2 class="display h2">The whole street</h2>
         </div>
-        <span class="eyebrow" data-reveal style="max-width:44ch;">Every address in the Society's directory of shops, in four sections</span>
+        <span class="eyebrow" data-reveal style="max-width:44ch;">Every address in the Society's directory of shops, by side of the street</span>
       </div>
       <div id="sections" class="sections"></div>
     </div>
@@ -221,14 +221,19 @@
 <script src="data/directory.js"></script>
 <script src="site.js"></script>
 <script>
-// One tile per directory section, then the street: the featured addresses, walked north to south
-document.getElementById("sections").innerHTML = Object.entries(GROUPS).map(([g, sec]) => `
-  <a class="tile" href="directory.html?g=${g}" data-reveal>
-    <b>${DIRECTORY.filter((e) => e.group === g).length}</b>
-    <h3>${sec.title}</h3>
-    <p>${sec.sub}</p>
-    <span class="go"><span class="roll"><span>Open section</span></span></span>
-  </a>`).join("");
+// The directory by side of the street: each side's High Street tile with its parade below
+document.getElementById("sections").innerHTML = ["south", "north"].map((sd) => `
+  <div class="side-col" data-reveal>
+    <span class="side-label">${sd === "south" ? "South side" : "North side"}</span>
+    ${Object.keys(GROUPS).filter((g) => GROUPS[g].side === sd).map((g) => `
+      <a class="tile${GROUPS[g].place === "High Street" ? " big" : ""}" href="directory.html?section=${g}">
+        <b>${numberRange(g)}</b>
+        <h3>${GROUPS[g].place}</h3>
+        <p>${GROUPS[g].sub}. ${addressCount(g)}</p>
+        <span class="go"><span class="roll"><span>Open</span></span></span>
+      </a>`).join("")}
+  </div>`).join("");
+// Then the street: the featured addresses, walked north to south
 initStreet(DIRECTORY.filter((e) => e.featured).sort((a, b) => b.lat - a.lat), { linkSections: true, fitCore: true });
 </script>
 </body>

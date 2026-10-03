@@ -42,7 +42,7 @@
   <!-- SECTION HEADER -->
   <section class="dir-head">
     <div class="wrap">
-      <span class="eyebrow" data-reveal><a href="index.html#directory">The directory</a> &middot; <span id="dir-count"></span> addresses</span>
+      <span class="eyebrow" data-reveal><a href="index.html#directory">The directory</a> &middot; <span id="dir-side"></span></span>
       <h1 id="dir-title" class="display" data-reveal></h1>
       <p id="dir-sub" class="lede" data-reveal></p>
       <nav id="dir-tabs" class="tabs" aria-label="Directory sections" data-reveal></nav>
@@ -141,15 +141,18 @@
 <script src="data/directory.js"></script>
 <script src="site.js"></script>
 <script>
-// One page per directory section, chosen by ?g=
-const g = GROUPS[new URLSearchParams(location.search).get("g")] ? new URLSearchParams(location.search).get("g") : "odd";
+// One page per directory section, chosen by ?section= (south-side, langley-parade, north-side, causeway-parade)
+const asked = new URLSearchParams(location.search).get("section");
+const g = GROUPS[asked] ? asked : "south-side";
 const sec = GROUPS[g], shops = DIRECTORY.filter((e) => e.group === g);
 document.title = `${sec.title} · Directory of Shops`;
 document.getElementById("dir-title").textContent = sec.title;
-document.getElementById("dir-sub").textContent = sec.sub;
-document.getElementById("dir-count").textContent = shops.length;
-document.getElementById("dir-tabs").innerHTML = Object.entries(GROUPS).map(([k, s]) =>
-  `<a href="directory.html?g=${k}"${k === g ? ' aria-current="page"' : ""}>${s.title} <b>${DIRECTORY.filter((e) => e.group === k).length}</b></a>`).join("");
+document.getElementById("dir-sub").textContent = `${sec.sub}. ${numberRange(g)}, ${addressCount(g)}.`;
+document.getElementById("dir-side").textContent = sec.side === "south" ? "South side" : "North side";
+// Tabs grouped by side of the street, named by place, with no counts to mistake for house numbers
+document.getElementById("dir-tabs").innerHTML = ["south", "north"].map((sd) =>
+  `<span class="tab-side">${sd === "south" ? "South side" : "North side"}</span>` + Object.keys(GROUPS).filter((k) => GROUPS[k].side === sd).map((k) =>
+    `<a href="directory.html?section=${k}"${k === g ? ' aria-current="page"' : ""}>${GROUPS[k].place}</a>`).join("")).join("");
 if (sec.photos) {
   const media = document.getElementById("dir-media");
   media.className = "group-media";

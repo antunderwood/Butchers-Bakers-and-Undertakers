@@ -69,12 +69,19 @@ function makeCompare(el, { follow = false } = {}) {
 const plainName = (e) => e.name.replace(/\s*\{[\d,]+\}/g, "");
 const shortName = (e) => plainName(e).replace(/\s*\(.*?\)/g, "").trim();
 const pinLabel = (e) => e.pin || e.no;
-// Odd numbers and Langley Parade are the south-east side; even numbers and Causeway Parade the north-west
-const side = (e) => (e.group === "even" || e.group === "causeway" ? "nw" : "se");
+const side = (e) => GROUPS[e.group].side;
+// Addresses always say which side, so a number is never read without its street
 function address(e) {
-  if (e.group === "langley") return `${e.no} Langley Parade`;
-  return (e.no ? e.no + " " : "") + "High Street" + (e.group === "causeway" ? ", Causeway Parade" : "");
+  if (e.group === "langley-parade") return `${e.no} Langley Parade`;
+  return (e.no ? e.no + " " : "") + "High Street, " + (e.group === "causeway-parade" ? "Causeway Parade" : `${side(e)} side`);
 }
+// A section as house numbers ("Nos. 1 to 87") and as a count in words, so counts never look like addresses
+const sectionOf = (g) => DIRECTORY.filter((e) => e.group === g);
+function numberRange(g) {
+  const n = sectionOf(g).map((e) => parseInt(e.no, 10)).filter(Number.isFinite);
+  return `Nos. ${Math.min(...n)} to ${Math.max(...n)}`;
+}
+const addressCount = (g) => `${sectionOf(g).length} addresses`;
 DIRECTORY.forEach((e) => {
   e.id = `${e.no} ${shortName(e)}`.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").split("-").slice(0, 7).join("-");
 });
@@ -132,8 +139,7 @@ const tellUs = (e) => `<a class="to-tell" href="mailto:shops@allhs.org.uk?subjec
 let linkSections = false;
 function sectionLink(e) {
   if (!linkSections) return "";
-  const n = DIRECTORY.filter((d) => d.group === e.group).length;
-  return `<a class="to-section" href="directory.html?g=${e.group}#${e.id}"><span class="roll"><span>See it among all ${n} in ${GROUPS[e.group].title}</span></span>${icon("out")}</a>`;
+  return `<a class="to-section" href="directory.html?section=${e.group}#${e.id}"><span class="roll"><span>See all of ${GROUPS[e.group].title}</span></span>${icon("out")}</a>`;
 }
 function briefHTML(e) {
   const [shown] = splitLines(e.lines);
@@ -199,7 +205,7 @@ function initStreet(shops, opts = {}) {
   const home = L.latLngBounds(core.map((e) => [e.lat, e.lng]));
   map.fitBounds(home, { padding: [32, 32], maxZoom: 18 });
   if (new Set(mapped.map(side)).size > 1) {
-    mapCard.insertAdjacentHTML("beforeend", '<div class="map-key" aria-hidden="true"><span><i></i>Odd numbers, south-east side</span><span><i class="nw"></i>Even numbers, north-west side</span></div>');
+    mapCard.insertAdjacentHTML("beforeend", '<div class="map-key" aria-hidden="true"><span><i></i>South side</span><span><i class="north"></i>North side</span></div>');
   }
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -287,7 +293,7 @@ function initStreet(shops, opts = {}) {
   function renderFull(dir = 0) {
     const e = shops[cur];
     full.setAttribute("aria-label", `${address(e)}, ${shortName(e)}`);
-    full.querySelector(".sv-count").textContent = `${pad(cur + 1)} / ${pad(shops.length)}`;
+    full.querySelector(".sv-count").textContent = GROUPS[e.group].short;
     fullBody.style.setProperty("--dx", dir * 32 + "px");
     fullBody.innerHTML = fullHTML(e);
     fullBody.scrollTop = 0;
@@ -320,7 +326,7 @@ function initStreet(shops, opts = {}) {
     view.hidden = i < 0;
     if (i < 0) return;
     const e = shops[i];
-    viewCount.textContent = `${pad(i + 1)} / ${pad(shops.length)}`;
+    viewCount.textContent = GROUPS[e.group].short; // a section name, not a position: the only number in view is the address
     viewLive.textContent = `${address(e)}, ${shortName(e)}: ${i + 1} of ${shops.length}`;
     viewBody.style.setProperty("--dx", dir * 32 + "px");
     viewBody.style.setProperty("--dy", dir ? "0px" : "12px");
@@ -379,7 +385,7 @@ function initStreet(shops, opts = {}) {
     if (opts.section && (cur + d < 0 || cur + d >= shops.length)) {
       const keys = Object.keys(GROUPS), k = keys[(keys.indexOf(opts.section) + d + keys.length) % keys.length];
       const next = DIRECTORY.filter((e) => e.group === k).at(d > 0 ? 0 : -1);
-      location.href = `directory.html?g=${k}#${full.open ? "full-" : ""}${next.id}`;
+      location.href = `directory.html?section=${k}#${full.open ? "full-" : ""}${next.id}`;
       return;
     }
     const i = (cur + d + shops.length) % shops.length;
@@ -483,8 +489,8 @@ function initStreet(shops, opts = {}) {
       const hl = (line) => line.replace(/\s*\{[\d,]+\}/g, "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
         .replace(new RegExp(trade ? TRADES[trade].source : esc(words[0] || ""), "gi"), (m) => m ? `<mark>${m}</mark>` : m);
       const q = new URLSearchParams(trade ? { t: trade } : { q: input.value.trim() });
-      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?g=${e.group}&${q}`}#full-${e.id}">
-        <b>${e.no || "\u00b7"}</b><span class="r-name">${shortName(e)}</span><span class="r-sec">${GROUPS[e.group].title}</span>
+      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?section=${e.group}&${q}`}#full-${e.id}">
+        <b>${e.no || "\u00b7"}</b><span class="r-name">${shortName(e)}</span><span class="r-sec">${GROUPS[e.group].short}</span>
         <span class="r-line">${hl(line)}</span></a></li>`).join("");
       // Keep the search in the address bar, so it survives Back and can be shared
       const url = new URL(location.href);
