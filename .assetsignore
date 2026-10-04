@@ -1,0 +1,13 @@
+# The assets directory is the repo root, so publish an allowlist: the site only.
+# Design canvases, canvas.json, early drafts and unused photos stay in the repo but off the web.
+/*
+!/index.html
+!/directory.html
+!/site.css
+!/site.js
+!/favicon.svg
+!/data/
+!/img/
+!/fonts/
+!/vendor/
+.DS_Store

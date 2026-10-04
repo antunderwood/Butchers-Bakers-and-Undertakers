@@ -260,3 +260,15 @@ read as addresses. Now only house numbers look like house numbers:
 - The map card shows the section name where it showed a position.
 - Links name the section: `directory.html?section=south-side|langley-parade|north-side|causeway-parade`,
   plus `#<shop>` or `#full-<shop>` and an optional `&q=`/`&t=` search.
+
+## Hosting (Oct 2026)
+
+Served by Cloudflare at https://allhs-bbu.flying-ant.uk/ as a static-assets
+Worker (`wrangler.jsonc`: no Worker script, no build step), replacing GitHub
+Pages. Workers Builds is connected to the GitHub repo, so a push to `main`
+deploys. The assets directory is the repo root and `.assetsignore` is an
+allowlist (the two pages, `site.css`, `site.js`, `favicon.svg`, `data/`,
+`img/`, `fonts/`, `vendor/`), so the design canvases, `canvas.json`, early
+drafts and unused photos stay in the repo but are not published. The custom
+domain comes from the `routes` entry, which creates the DNS record and
+certificate on deploy (the flying-ant.uk zone is on the same account).
