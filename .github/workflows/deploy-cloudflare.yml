@@ -1,0 +1,20 @@
+# Deploy the site to the allhs-bbu Cloudflare Worker (allhs-bbu.flying-ant.uk) on every push to main.
+# Needs repo secrets CLOUDFLARE_API_TOKEN (the "Edit Cloudflare Workers" template) and CLOUDFLARE_ACCOUNT_ID.
+name: Deploy to Cloudflare
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

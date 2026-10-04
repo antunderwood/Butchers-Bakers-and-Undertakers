@@ -1,5 +1,5 @@
 // Cloudflare Worker serving the site as static assets: no Worker script, no build step.
-// Workers Builds deploys on every push to main; .assetsignore keeps the design working files out.
+// GitHub Actions (.github/workflows/deploy-cloudflare.yml) deploys on every push to main; .assetsignore keeps the design working files out.
 {
   "name": "allhs-bbu",
   "compatibility_date": "2026-10-04",

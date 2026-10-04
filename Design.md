@@ -269,8 +269,12 @@ read as addresses. Now only house numbers look like house numbers:
 
 Served by Cloudflare at https://allhs-bbu.flying-ant.uk/ as a static-assets
 Worker (`wrangler.jsonc`: no Worker script, no build step), replacing GitHub
-Pages. Workers Builds is connected to the GitHub repo, so a push to `main`
-deploys. The assets directory is the repo root and `.assetsignore` is an
+Pages. A GitHub Actions workflow (`.github/workflows/deploy-cloudflare.yml`,
+`cloudflare/wrangler-action`) runs `wrangler deploy` on every push to `main`,
+using the repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+Cloudflare's own Git integration (Workers Builds) was tried first but never
+received the pushes, and its logs were out of sight; Actions logs sit beside
+the commits. The assets directory is the repo root and `.assetsignore` is an
 allowlist (the two pages, `site.css`, `site.js`, `favicon.svg`, `data/`,
 `img/`, `fonts/`, `vendor/`), so the design canvases, `canvas.json`, early
 drafts and unused photos stay in the repo but are not published. The custom
