@@ -133,6 +133,7 @@ a:hover .roll > span, button:hover .roll > span, a:focus-visible .roll > span{tr
 .sv-count{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--stone);margin-right:6px;}
 .sv-step{display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:background .3s, color .3s, border-color .3s;}
 .sv-step:hover{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+#shop-view.guest .sv-prev,#shop-view.guest .sv-next{display:none;} /* a guest from another section has no neighbours on this page */
 .sv-body .photo{aspect-ratio:16/10;}
 .sv-body .num{color:var(--rust);-webkit-text-stroke-color:var(--rust);}
 /* Content swaps in from the side you stepped towards (--dx), or rises when opened from the map */

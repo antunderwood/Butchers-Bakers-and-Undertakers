@@ -218,9 +218,13 @@ cleared by the user.
   banks, chemists, post offices, hairdressers, shoes) defined as regexes in
   `TRADES` in `site.js`. Matches on the current page light up on the map
   and filter the chips; the results list covers every section and opens
-  each entry on the map with its preview card (on another section's page if
-  needed), so the result is seen in place first; the full view is one tap
-  further, from the card's expand button. The search
+  each entry on the map with its preview card, so the result is seen in
+  place first. On the front page every result previews there, even entries
+  from other sections: they join the map as a guest marker (no chip, no
+  prev/next) until another shop opens, and their full view opens on their
+  section's page with the search carried over, so Back returns to the front
+  page with the search and preview as they were. On a section page, results
+  from other sections open that section's page. The search
   is kept in the URL (`?q=` or `?t=`), so it survives Back and can be shared.
 - **Hero and claims**: the hero is now a real directory pair, Henderson Hall
   and its neighbours then and now (`img/hero-*.jpg`, 1200x750), darkened in

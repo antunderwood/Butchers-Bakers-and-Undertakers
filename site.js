@@ -213,7 +213,7 @@ function initStreet(shops, opts = {}) {
 
   function hot(i, on) {
     pins[i]?.classList.toggle("hot", on);
-    chips[i].classList.toggle("hot", on);
+    chips[i]?.classList.toggle("hot", on);
   }
   function hoverLink(el, i) {
     el.addEventListener("pointerenter", () => hot(i, true));
@@ -221,24 +221,25 @@ function initStreet(shops, opts = {}) {
     el.addEventListener("focus", () => hot(i, true));
     el.addEventListener("blur", () => hot(i, false));
   }
+  function addMarker(e, i) {
+    const marker = L.marker([e.lat, e.lng], {
+      icon: L.divIcon({ className: "pin-wrap", html: `<span class="pin side-${side(e)}">${pinLabel(e)}</span>`, iconSize: [28, 28] }),
+      riseOnHover: true
+    }).addTo(map).on("click", () => openShop(i));
+    const el = marker.getElement();
+    el.setAttribute("aria-label", `${address(e)}: ${shortName(e)}`);
+    // Leaflet only opens popups on Enter, so markers need their own key handling
+    el.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      ev.preventDefault();
+      openShop(i);
+    });
+    hoverLink(el, i);
+    markers[i] = marker;
+    pins[i] = el.firstChild;
+  }
   shops.forEach((e, i) => {
-    if (e.lat) {
-      const marker = L.marker([e.lat, e.lng], {
-        icon: L.divIcon({ className: "pin-wrap", html: `<span class="pin side-${side(e)}">${pinLabel(e)}</span>`, iconSize: [28, 28] }),
-        riseOnHover: true
-      }).addTo(map).on("click", () => openShop(i));
-      const el = marker.getElement();
-      el.setAttribute("aria-label", `${address(e)}: ${shortName(e)}`);
-      // Leaflet only opens popups on Enter, so markers need their own key handling
-      el.addEventListener("keydown", (ev) => {
-        if (ev.key !== "Enter" && ev.key !== " ") return;
-        ev.preventDefault();
-        openShop(i);
-      });
-      hoverLink(el, i);
-      markers[i] = marker;
-      pins[i] = el.firstChild;
-    }
+    if (e.lat) addMarker(e, i);
     const chip = document.createElement("button");
     chip.className = "chip";
     chip.dataset.reveal = "";
@@ -277,6 +278,28 @@ function initStreet(shops, opts = {}) {
   const viewCount = view.querySelector(".sv-count");
   const viewLive = document.getElementById("shop-live");
   let cur = -1;
+  // A guest: an entry from another section, opened from the search on the front page. It takes the
+  // slot after the page's own shops, with a marker but no chip, and leaves when another shop opens.
+  const G = shops.length;
+  let guest = null;
+  const at = (i) => i === G ? guest : shops[i];
+  function setGuest(e) {
+    if (e === guest) return;
+    markers[G]?.remove();
+    delete markers[G];
+    delete pins[G];
+    guest = e;
+    if (cur === G) cur = -1; // a different guest in the same slot still has to be shown
+    if (e?.lat) { addMarker(e, G); declutter(); }
+    view.classList.toggle("guest", !!e);
+  }
+  // Its full view is on its own section's page, keeping the search, so Back returns here as it was
+  function guestURL(e, wantFull) {
+    const p = new URLSearchParams({ section: e.group });
+    const now = new URLSearchParams(location.search);
+    ["q", "t"].forEach((k) => now.get(k) && p.set(k, now.get(k)));
+    return `directory.html?${p}#${wantFull ? "full-" : ""}${e.id}`;
+  }
   const full = document.createElement("dialog");
   full.className = "full";
   full.innerHTML = `
@@ -300,6 +323,7 @@ function initStreet(shops, opts = {}) {
     if (photo) makeCompare(photo, { follow: true }); // same as the cards: the mouse alone moves it
   }
   function openFull() {
+    if (cur === G) { location.href = guestURL(guest, true); return; }
     history.pushState(null, "", "#full-" + shops[cur].id); // Back closes it, and the view can be shared
     renderFull();
     full.showModal();
@@ -318,15 +342,16 @@ function initStreet(shops, opts = {}) {
 
   function show(i, dir = 0) {
     if (i === cur) return;
+    if (i !== G) setGuest(null);
     cur = i;
     [pins, chips].forEach((els) => els.forEach((el, j) => el?.classList.toggle("is-active", j === i)));
     markers.forEach((m, j) => m.setZIndexOffset(j === i ? 1000 : 0));
     mapLayout.classList.toggle("open", i >= 0);
     view.hidden = i < 0;
     if (i < 0) return;
-    const e = shops[i];
+    const e = at(i);
     viewCount.textContent = GROUPS[e.group].short; // a section name, not a position: the only number in view is the address
-    viewLive.textContent = `${address(e)}, ${shortName(e)}: ${i + 1} of ${shops.length}`;
+    viewLive.textContent = `${address(e)}, ${shortName(e)}` + (i === G ? "" : `: ${i + 1} of ${shops.length}`);
     viewBody.style.setProperty("--dx", dir * 32 + "px");
     viewBody.style.setProperty("--dy", dir ? "0px" : "12px");
     viewBody.innerHTML = briefHTML(e);
@@ -377,7 +402,7 @@ function initStreet(shops, opts = {}) {
   };
   function openShop(i) {
     if (i === cur) return;
-    history.pushState(null, "", "#" + shops[i].id);
+    history.pushState(null, "", "#" + at(i).id);
     show(i);
   }
   function stepShop(d) {
@@ -396,12 +421,16 @@ function initStreet(shops, opts = {}) {
     const was = cur, hadFocus = view.contains(document.activeElement);
     history.pushState(null, "", location.pathname + location.search);
     show(-1);
-    if (hadFocus) chips[was].focus({ preventScroll: true });
+    if (hadFocus) chips[was]?.focus({ preventScroll: true });
   }
   function fromHash() {
     const wantFull = location.hash.startsWith("#full-");
     const id = wantFull ? "#" + location.hash.slice(6) : location.hash;
-    show(shops.findIndex((e) => "#" + e.id === id));
+    let i = shops.findIndex((e) => "#" + e.id === id);
+    const other = i < 0 && opts.linkSections && DIRECTORY.find((e) => "#" + e.id === id);
+    if (other && wantFull) return location.replace(guestURL(other, true));
+    if (other) { setGuest(other); i = G; }
+    show(i);
     if (wantFull && cur >= 0) {
       renderFull();
       if (!full.open) full.showModal();
@@ -488,7 +517,7 @@ function initStreet(shops, opts = {}) {
       const hl = (line) => line.replace(/\s*\{[\d,]+\}/g, "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
         .replace(new RegExp(trade ? TRADES[trade].source : esc(words[0] || ""), "gi"), (m) => m ? `<mark>${m}</mark>` : m);
       const q = new URLSearchParams(trade ? { t: trade } : { q: input.value.trim() });
-      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?section=${e.group}&${q}`}#${e.id}">
+      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) || opts.linkSections ? "" : `directory.html?section=${e.group}&${q}`}#${e.id}">
         <b>${e.no || "\u00b7"}</b><span class="r-name">${shortName(e)}</span><span class="r-sec">${GROUPS[e.group].short}</span>
         <span class="r-line">${hl(line)}</span></a></li>`).join("");
       // Keep the search in the address bar, so it survives Back and can be shared
