@@ -223,7 +223,8 @@ cleared by the user.
   from other sections: they join the map as a guest marker (no chip, no
   prev/next) until another shop opens, and their full view opens on their
   section's page with the search carried over, so Back returns to the front
-  page with the search and preview as they were. On a section page, results
+  page with the search and preview as they were; closing that full view (Back to
+  map, Esc or the backdrop) does the same, via `&back=1` in its link. On a section page, results
   from other sections open that section's page. The search
   is kept in the URL (`?q=` or `?t=`), so it survives Back and can be shared.
 - **Hero and claims**: the hero is now a real directory pair, Henderson Hall

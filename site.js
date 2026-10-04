@@ -298,6 +298,7 @@ function initStreet(shops, opts = {}) {
     const p = new URLSearchParams({ section: e.group });
     const now = new URLSearchParams(location.search);
     ["q", "t"].forEach((k) => now.get(k) && p.set(k, now.get(k)));
+    if (wantFull) p.set("back", "1"); // closing that full view returns here
     return `directory.html?${p}#${wantFull ? "full-" : ""}${e.id}`;
   }
   const full = document.createElement("dialog");
@@ -331,6 +332,9 @@ function initStreet(shops, opts = {}) {
   // However it closes (button, Esc, backdrop), land on the shop's map view rather than going back,
   // so closing after stepping to another shop doesn't jump the map back to the first one
   full.addEventListener("close", () => {
+    // Opened from another page's map (a front-page search result): go back to it, as it was. The
+    // referrer check keeps a shared link carrying back=1 from leaving the site.
+    if (new URLSearchParams(location.search).has("back") && document.referrer.startsWith(location.origin)) return history.back();
     if (location.hash.startsWith("#full-")) history.replaceState(null, "", "#" + shops[cur].id);
   });
   full.addEventListener("click", (ev) => { if (ev.target === full) full.close(); });
