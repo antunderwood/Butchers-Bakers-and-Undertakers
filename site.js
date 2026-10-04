@@ -488,7 +488,7 @@ function initStreet(shops, opts = {}) {
       const hl = (line) => line.replace(/\s*\{[\d,]+\}/g, "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
         .replace(new RegExp(trade ? TRADES[trade].source : esc(words[0] || ""), "gi"), (m) => m ? `<mark>${m}</mark>` : m);
       const q = new URLSearchParams(trade ? { t: trade } : { q: input.value.trim() });
-      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?section=${e.group}&${q}`}#full-${e.id}">
+      results.innerHTML = hits.map(({ e, line }) => `<li><a href="${shops.includes(e) ? "" : `directory.html?section=${e.group}&${q}`}#${e.id}">
         <b>${e.no || "\u00b7"}</b><span class="r-name">${shortName(e)}</span><span class="r-sec">${GROUPS[e.group].short}</span>
         <span class="r-line">${hl(line)}</span></a></li>`).join("");
       // Keep the search in the address bar, so it survives Back and can be shared

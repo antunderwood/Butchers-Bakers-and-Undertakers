@@ -218,7 +218,9 @@ cleared by the user.
   banks, chemists, post offices, hairdressers, shoes) defined as regexes in
   `TRADES` in `site.js`. Matches on the current page light up on the map
   and filter the chips; the results list covers every section and opens
-  each entry's full view (on another section's page if needed). The search
+  each entry on the map with its preview card (on another section's page if
+  needed), so the result is seen in place first; the full view is one tap
+  further, from the card's expand button. The search
   is kept in the URL (`?q=` or `?t=`), so it survives Back and can be shared.
 - **Hero and claims**: the hero is now a real directory pair, Henderson Hall
   and its neighbours then and now (`img/hero-*.jpg`, 1200x750), darkened in
