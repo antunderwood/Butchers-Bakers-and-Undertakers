@@ -43,6 +43,18 @@ label > :is(input,select,textarea){margin-top:4px;color:var(--ink);font-weight:4
 .hint{margin:0;font-size:13px;color:var(--stone);}
 .pin{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:2px solid var(--cream);background:var(--rust);color:var(--cream);font-weight:700;font-size:11px;box-shadow:0 2px 8px rgba(20,15,10,.5);cursor:grab;}
 details{font-size:13px;color:var(--stone);}
+#images h2{font-size:13px;color:var(--stone);margin:0 0 8px;}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;}
+.slot{margin:0;}
+.slot img,.slot .empty{display:grid;place-items:center;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--stone);font-size:13px;}
+.slot img.then{filter:grayscale(1) sepia(0.3);}
+.slot figcaption{font-weight:600;margin:6px 0;}
+.btn{position:relative;display:inline-block;padding:8px 14px;border:1.5px solid var(--ink);border-radius:999px;font-weight:600;font-size:15px;color:var(--ink);cursor:pointer;}
+.btn:focus-within{outline:2px solid var(--rust);outline-offset:2px;}
+.btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.extras-ed{list-style:none;margin:14px 0;padding:0;display:grid;gap:10px;}
+.extras-ed li{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;}
+.extras-ed img{width:120px;max-height:90px;object-fit:contain;border:1px solid var(--line);background:#fff;}
 @media (max-width:760px){
   #app{grid-template-columns:1fr;}
   #list{position:static;max-height:40vh;border-right:0;border-bottom:1px solid var(--line);}
@@ -91,13 +103,13 @@ details{font-size:13px;color:var(--stone);}
     <details class="wide"><summary>Footnote sources</summary><ol id="sources"></ol></details>
     <label class="half">Summary (optional, shown under the name) <textarea name="summary" rows="2"></textarea></label>
     <label class="half">Description (optional; blank line between paragraphs) <textarea name="description" rows="2"></textarea></label>
+    <div id="images" class="wide" aria-label="Images"></div>
     <div class="wide"><div id="map"></div></div>
     <p id="maphint" class="hint wide"></p>
     <label>Latitude <input name="lat" type="number" step="0.000001"></label>
     <label>Longitude <input name="lng" type="number" step="0.000001"></label>
     <label>OSM element <input name="osm" placeholder="e.g. node/2422174408"></label>
     <div class="row"><button id="unplace" type="button">Remove from map</button></div>
-    <p id="media" class="hint wide"></p>
   </form>
 </div>
 
@@ -176,8 +188,7 @@ function select(i) {
     if (el.type === "checkbox") el.checked = !!e[el.name];
     else el.value = el.name === "lines" ? e.lines.join("\n") : e[el.name] ?? "";
   }
-  $("#media").textContent = e.photos || e.extras
-    ? `${e.photos?.length || 0} photo(s) and ${e.extras?.length || 0} other image(s) are kept as they are (images are added in data/directory.js).` : "";
+  renderImages();
   renderList();
   $("#list [aria-current]")?.scrollIntoView({ block: "nearest" });
   showOnMap(true);
@@ -239,6 +250,69 @@ $("#remove").onclick = () => {
   status(`Unsaved changes: ${changed.size}`);
   select(Math.min(sel, entries.length - 1));
 };
+
+// --- Images: Then and Now photos for the compare slider, and adverts with captions ---
+const ADVERT = "Advert from a St Lawrence Church magazine"; // advert()'s default caption in data/directory.js
+const previews = {}; // uploads show from memory until the deploy publishes them
+const view = (src) => previews[src] || src;
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const stem = (e, kind) => ((e.no || e.pin || e.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "entry") + "-" + kind;
+function renderImages() {
+  const e = entries[sel], p = e.photos || [];
+  const slot = (i, title) => `<figure class="slot">
+      ${p[i] ? `<img class="${title.toLowerCase()}" src="${esc(view(p[i]))}" alt="${title} photograph">` : `<div class="empty">No ${title.toLowerCase()} photo</div>`}
+      <figcaption>${title}</figcaption>
+      <div class="row">
+        ${i && !p[0] ? "" : `<label class="btn">${p[i] ? "Replace" : "Upload"}<input type="file" accept="image/*" data-photo="${i}"></label>`}
+        ${p[i] && !(i === 0 && p[1]) ? `<button type="button" data-unphoto="${i}">Remove</button>` : ""}
+      </div></figure>`;
+  $("#images").innerHTML = `<h2>Photos</h2><div class="slots">${slot(0, "Then")}${slot(1, "Now")}</div>
+    <p class="hint">The site slides between Then and Now, so take Now from the same spot. A Now photo needs a Then; with Then only, the site shows it alone.</p>
+    <h2 style="margin-top:18px">Adverts and other images</h2>
+    <ol class="extras-ed">${(e.extras || []).map(([src, cap], i) => `<li><img src="${esc(view(src))}" alt="">
+      <input value="${esc(cap)}" data-cap="${i}" aria-label="Caption"><button type="button" data-unextra="${i}">Remove</button></li>`).join("")}</ol>
+    <label class="btn">Add an image<input type="file" accept="image/*" data-extra></label>`;
+}
+// Shrinks a chosen image to the site's sizes (its photos are 960x720) and commits it; returns its path
+async function upload(file, name, max) {
+  const bmp = await createImageBitmap(file).catch(() => { throw new Error("That file isn't an image this browser can read (try a JPEG or PNG)."); });
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = Object.assign(document.createElement("canvas"), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.85));
+  const data = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
+  const { src } = await api("upload", { stem: name, data });
+  previews[src] = URL.createObjectURL(blob);
+  return src;
+}
+$("#images").addEventListener("change", async (ev) => {
+  const el = ev.target, file = el.files?.[0], e = entries[sel];
+  if (!file) return;
+  const slot = el.dataset.photo, kind = slot === "0" ? "then" : slot === "1" ? "now" : "advert";
+  status("Uploading the image…");
+  try {
+    const src = await upload(file, stem(e, kind), kind === "advert" ? 1000 : 1280);
+    if (slot) (e.photos ||= [])[+slot] = src;
+    else (e.extras ||= []).push([src, ADVERT]);
+    edited(e);
+    status(`Image uploaded. Save to show it on the site (unsaved changes: ${changed.size}).`);
+  } catch (err) { status(err.message); }
+  if (entries[sel] === e) renderImages();
+});
+$("#images").addEventListener("input", (ev) => {
+  const i = ev.target.dataset.cap, e = entries[sel];
+  if (i === undefined) return;
+  e.extras[i][1] = ev.target.value;
+  edited(e);
+});
+$("#images").addEventListener("click", (ev) => {
+  const d = ev.target.dataset, e = entries[sel];
+  if (d.unphoto) { e.photos.splice(+d.unphoto, 1); if (!e.photos.length) delete e.photos; }
+  else if (d.unextra) { e.extras.splice(+d.unextra, 1); if (!e.extras.length) delete e.extras; }
+  else return;
+  edited(e);
+  renderImages();
+});
 
 // --- The map: other entries as dots, this one as a pin to drag; a click places it ---
 let map, dots, pin;

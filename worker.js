@@ -1,19 +1,19 @@
 // The site editor's API. Everything else is static assets: wrangler.jsonc runs this Worker
 // first for /api/* only. Editors log in with a name and password held in the EDITORS KV
 // namespace (add one with scripts/add-editor.js); a save commits data/directory.js to GitHub,
-// and the push to main redeploys the site.
+// and an uploaded image goes to img/directory/; each push to main redeploys the site.
 //
 // Secret: GITHUB_TOKEN, a fine-grained token with Contents read and write on this repo only.
 import { problem, serialize, verifyPassword } from "./editor-lib.js";
 
-const FILE = "https://api.github.com/repos/antunderwood/allhs-bbu/contents/data/directory.js";
+const REPO = "https://api.github.com/repos/antunderwood/allhs-bbu/contents/";
 const SESSION_HOURS = 8;
 const json = (body, status = 200, headers = {}) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store", ...headers } });
 const cookie = (token, age) => `session=${token}; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
 const tokenOf = (req) => req.headers.get("Cookie")?.match(/(?:^|;\s*)session=([\w-]+)/)?.[1];
 
-const github = (env, init = {}) => fetch(FILE + (init.method ? "" : "?ref=main"), {
+const github = (env, path, init = {}) => fetch(REPO + path + (init.method ? "" : "?ref=main"), {
   ...init,
   headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: "application/vnd.github+json", "User-Agent": "allhs-bbu-editor" }
 });
@@ -24,7 +24,7 @@ function encode(text) {
   return btoa(s);
 }
 async function current(env) {
-  const res = await github(env);
+  const res = await github(env, "data/directory.js");
   if (!res.ok) throw new Error(`GitHub read failed (${res.status})`);
   const f = await res.json();
   return { sha: f.sha, text: decode(f.content) };
@@ -48,7 +48,7 @@ async function save(req, env, user) {
   const why = problem(entries, text);
   if (why) return json({ error: why }, 400);
   // GitHub refuses the write if the file has changed since `sha`, the version the editor loaded
-  const res = await github(env, {
+  const res = await github(env, "data/directory.js", {
     method: "PUT",
     body: JSON.stringify({
       branch: "main", sha, content: encode(serialize(entries, text)),
@@ -58,6 +58,21 @@ async function save(req, env, user) {
   if (res.status === 409) return json({ error: "Someone else has saved since you opened the editor. Reload to get their changes, then make yours again." }, 409);
   if (!res.ok) return json({ error: `GitHub write failed (${res.status})` }, 502);
   return json({ sha: (await res.json()).content.sha });
+}
+
+// Commits a JPEG (already resized by the editor) under a new name, so no published image is ever replaced
+async function upload(req, env, user) {
+  const { stem, data } = await req.json();
+  if (!/^[a-z0-9-]{1,60}$/.test(stem || "")) return json({ error: "Bad image name." }, 400);
+  const bytes = atob(data || "");
+  if (!bytes.startsWith("\xFF\xD8\xFF") || bytes.length > 3e6) return json({ error: "Images must be JPEGs under 3 MB." }, 400);
+  const path = `img/directory/${stem}-${Date.now().toString(36)}.jpg`;
+  const res = await github(env, path, {
+    method: "PUT",
+    body: JSON.stringify({ branch: "main", content: data, message: `Add image ${path}\n\nUploaded by ${user} in the site editor.` })
+  });
+  if (!res.ok) return json({ error: `GitHub write failed (${res.status})` }, 502);
+  return json({ src: path });
 }
 
 export default {
@@ -77,6 +92,7 @@ export default {
       if (!user) return json({ error: "Please log in." }, 401);
       if (route === "GET /api/data") return json({ user, ...(await current(env)) });
       if (route === "POST /api/save") return await save(req, env, user);
+      if (route === "POST /api/upload") return await upload(req, env, user);
       return json({ error: "Not found" }, 404);
     } catch (err) {
       return json({ error: err.message }, 500);
