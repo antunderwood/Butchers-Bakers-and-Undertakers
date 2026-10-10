@@ -8,9 +8,14 @@
 // Dashes in the directory are written as commas or colons here.
 //
 // Map positions are the OpenStreetMap element named in `osm`, fetched Sept/Oct 2026: check
-// one at openstreetmap.org/<osm>. Entries without one (houses, demolished buildings) have no
-// marker. `featured` entries (at most 10) go on the front page; every entry also appears on
-// its section's page. `summary` and `description` are optional extra text to write later.
+// one at openstreetmap.org/<osm> (OSM still names no. 16 "Your Move", its previous occupant;
+// same premises). Positions without `osm` were placed by hand in the site editor. Entries
+// without a position (houses, demolished buildings) have no marker. `featured` entries (at
+// most 10) go on the front page; every entry also appears on its section's page. `summary`
+// and `description` are optional extra text.
+//
+// The site editor (editor.html) rewrites everything from `const DIRECTORY = [` down, one
+// entry per line: comments inside the list other than the section dividers are not kept.
 
 const SOURCES = {
   1: "Abbots Langley: A Hertfordshire Village (Hastie & Spain)",
@@ -62,8 +67,10 @@ const DIRECTORY = [
     "~ In the 1980s, Breakspear Hospital for Diagnostic Medicine, Allergy and Environmental Medicine was recorded as 1 High Street but was better known as Langley House and did not refer to the present property.",
     "Part of D. Stephens, Motor Car Breakers at 7 and 9a (1966-1988)",
     "A. Law, High Class Boot and Shoe Repairs (1949-1958) {1,2,3}"] },
-  { group: "south-side", no: "3", name: "Residential", lines: ["Originally a single-storey house"] },
-  { group: "south-side", no: "5", name: "Residential", lines: ["School teachers’ house"] },
+  { group: "south-side", no: "3", name: "Residential", lines: [
+    "Originally a single-storey house"] },
+  { group: "south-side", no: "5", name: "Residential", lines: [
+    "School teachers’ house"] },
   { group: "south-side", no: "7", name: "Residential", photos: pair("07"), lines: [
     "D. Stephens, motor car breakers (1966-1990) {3,4}",
     "Mrs Winifred Gardener, Sweet Shop (1956-1962) {3,5}",
@@ -97,26 +104,29 @@ const DIRECTORY = [
     "Simons (Butchers), 1826-1974 {3}",
     "J. Clarke (Butcher), early 19th century {8}",
     "G. Harding (Butcher), late 18th century {10}"] },
-  { group: "south-side", no: "19", name: "Residential", lines: ["Joint hereditament with shop at no.17"] },
-  { group: "south-side", no: "21", name: "The Boys Home Public House", featured: true, photos: pair("21"),
-    osm: "way/218815409", lat: 51.707397, lng: -0.416173, lines: [
+  { group: "south-side", no: "19", name: "Residential", lines: [
+    "Joint hereditament with shop at no.17"] },
+  { group: "south-side", no: "21", name: "The Boys Home Public House", featured: true, photos: pair("21"), osm: "way/218815409", lat: 51.707397, lng: -0.416173, lines: [
     "Previously “The Rose and Crown” Public House (name changed by David Allery in 1980s)",
     "And previously “The Middle House” (late 19th century)",
     "Grocery and Provision Shop (proprietress: Mrs Martha Hills) {6}, 1886-1899 {3,11}",
     "Mrs Jane Lunnon (1881-1882), Beer seller and shopkeeper {3,6}",
     "Built in 1850 on land owned by Mr Thomas Ebburn (canal haulier/coal, Apsley Wharf)"] },
-  { group: "south-side", no: "23", name: "Residential", lines: ["Known as Alban Cottage in 1897"] },
+  { group: "south-side", no: "23", name: "Residential", lines: [
+    "Known as Alban Cottage in 1897"] },
   { group: "south-side", no: "25", name: "Residential (Harvest House)", lines: [] },
   { group: "south-side", no: "27", name: "Residential", lines: [
     "Mrs Miller stored antiques and furniture (1960s-2019)",
     "David Gibbs, Bakers Shop and Bakery: Bakers, Confectioners, Corn Dealers (1825-1938) {1,3}"] },
-  { group: "south-side", no: "29", name: "Residential", lines: ["Calvert (photographer in 1920s) {6}", "Built in 1850s"] },
+  { group: "south-side", no: "29", name: "Residential", lines: [
+    "Calvert (photographer in 1920s) {6}",
+    "Built in 1850s"] },
   { group: "south-side", no: "31", name: "Residential", lines: [
-    "Charles Harris, boot repairs and parish clerk in 1922, 1937; 1886-1938 {3}", "Built in 1850s"] },
+    "Charles Harris, boot repairs and parish clerk in 1922, 1937; 1886-1938 {3}",
+    "Built in 1850s"] },
   { group: "south-side", no: "33", name: "Cottage", lines: [
     "Demolished in 1960s when King’s Head Public House rebuilt and road straightened."] },
-  { group: "south-side", no: "35", name: "Pin Wei", featured: true, photos: pair("35"),
-    osm: "way/232832789", lat: 51.706989, lng: -0.416297, lines: [
+  { group: "south-side", no: "35", name: "Pin Wei", featured: true, photos: pair("35"), osm: "way/232832789", lat: 51.706989, lng: -0.416297, lines: [
     "Oriental restaurant, closed 2023",
     "The Kings Head PH (1756-2006) {12}",
     "~ Original building close to the road demolished in 1960s and replaced with a flat-roof structure set back behind the car park"] },
@@ -130,8 +140,7 @@ const DIRECTORY = [
     "McKee’s, Petrol Garage and Car Hire (1926-27) {3}; Arthur Harris, car hire (1929-34) {1}",
     "Mitchell’s, forge and blacksmith’s (1908-1924) {3}",
     "Busby’s, builder’s yard (who rented from Cannon Brewery) {22}"] },
-  { group: "south-side", no: "39 & 41", pin: "39", name: "Cinnamon Lodge Indian Restaurant (A. Chowdhury)", featured: true,
-    photos: pair("39"), extras: [advert("41-advert")], osm: "node/2399910269", lat: 51.706857, lng: -0.416591, lines: [
+  { group: "south-side", no: "39 & 41", pin: "39", name: "Cinnamon Lodge Indian Restaurant (A. Chowdhury)", featured: true, photos: pair("39"), extras: [advert("41-advert")], osm: "node/2399910269", lat: 51.706857, lng: -0.416591, lines: [
     "# No. 39",
     "Forest of India, Indian restaurant",
     "Peony Garden, Chinese Restaurant",
@@ -175,8 +184,7 @@ const DIRECTORY = [
     "Ernest Thompson, Chemist (1949) {3}",
     "Samuel Gray Fenton’s, Chemist (1927-1947) {14}",
     "Built in 1920s on site of Busby’s builder’s yard, which was rented from the Cannon Brewery"] },
-  { group: "south-side", no: "49", name: "San Giorgio Pizza Takeaway (Laura and Genaro Depiano)", photos: pair("49"),
-    osm: "node/2399910277", lat: 51.706655, lng: -0.416661, lines: [
+  { group: "south-side", no: "49", name: "San Giorgio Pizza Takeaway (Laura and Genaro Depiano)", photos: pair("49"), osm: "node/2399910277", lat: 51.706655, lng: -0.416661, lines: [
     "Breaktime",
     "Bill the Baker",
     "Milly’s the bakers",
@@ -189,8 +197,7 @@ const DIRECTORY = [
     "Doret, Ladies’, Children’s and Babies’ wear (proprietress: Mrs E.M. Chapman) {5}",
     "Doret, Ladies’, Children’s and Babies’ wear (proprietress: Miss P. Luck) (1926-1942) {3}",
     "Built in 1920s on site of Busby’s builder’s yard, which was rented from the Cannon Brewery"] },
-  { group: "south-side", no: "51", name: "M.K. Ginder & Sons (Funeral Directors)", osm: "node/2399910271", lat: 51.706609, lng: -0.416677,
-    extras: [advert("51-logo", "M.K. Ginder & Sons"), advert("51-advert")], lines: [
+  { group: "south-side", no: "51", name: "M.K. Ginder & Sons (Funeral Directors)", extras: [advert("51-logo", "M.K. Ginder & Sons"), advert("51-advert")], osm: "node/2399910271", lat: 51.706609, lng: -0.416677, lines: [
     "The Body Shop, Health and Beauty Salon; gym upstairs",
     "Dennis Dobson, Barber and Hairdresser (after 1960)",
     "Bon-Bon, Confectioner, toys and stationers: proprietors: L.R. and E. Lyons (1949-1973) {3}",
@@ -207,8 +214,7 @@ const DIRECTORY = [
   { group: "south-side", no: "57 & 59", pin: "57", name: "Sweeney’s (together with Morrisons)", osm: "way/218952090", lat: 51.706265, lng: -0.416699, lines: [
     "Budgens",
     "Bishops supermarket (built in 1963 on part of the Langley House “plantation”)"] },
-  { group: "south-side", no: "61", name: "Boots Pharmacy", featured: true, photos: pair("61"), extras: [advert("61-advert")],
-    osm: "node/2399943061", lat: 51.706196, lng: -0.416885, lines: [
+  { group: "south-side", no: "61", name: "Boots Pharmacy", featured: true, photos: pair("61"), extras: [advert("61-advert")], osm: "node/2399943061", lat: 51.706196, lng: -0.416885, lines: [
     "Moss’s Pharmacy",
     "John Tapster’s chemist (1976, 1980, 1988) {4} (Mr Tapster retired ????)",
     "Kinloch and Anderson (1956-76) {3}",
@@ -219,14 +225,12 @@ const DIRECTORY = [
     "Lloyds Bank (1968-2020) {1}",
     "A.J. Midgley, footwear (1962-1969) {3}",
     "John Lea, Boots and Shoes, repairs (1927-1960) {3}"] },
-  { group: "south-side", no: "65", name: "Sheffield’s Euronics", osm: "node/2399943068", lat: 51.706085, lng: -0.416996,
-    extras: [advert("65-drawing", "Sheffields, drawing by Prue King (the directory’s cover)")], lines: [
+  { group: "south-side", no: "65", name: "Sheffield’s Euronics", extras: [advert("65-drawing", "Sheffields, drawing by Prue King (the directory’s cover)")], osm: "node/2399943068", lat: 51.706085, lng: -0.416996, lines: [
     "H.F. Sheffield Ltd. (1958-current)"] },
   { group: "south-side", no: "67", name: "Signature Estates (2013-present)", osm: "node/2399943062", lat: 51.706031, lng: -0.417050, lines: [
     "Craft Tub (2010-2013) {22}",
     "Sheffield’s showroom and toy shop (1962-2010) {3}"] },
-  { group: "south-side", no: "69", name: "Over the Moon", osm: "node/2399943066", lat: 51.705976, lng: -0.417104,
-    extras: [advert("69-logo", "Over the Moon")], lines: [
+  { group: "south-side", no: "69", name: "Over the Moon", extras: [advert("69-logo", "Over the Moon")], osm: "node/2399943066", lat: 51.705976, lng: -0.417104, lines: [
     "Lynn Luck 2008-2017; Melissa Lee 2017-present",
     "Abbots Langley Flowers, Lynn Luck (2003-2008) {22}",
     "Heather’s Flowers (1995-2003)",
@@ -240,8 +244,7 @@ const DIRECTORY = [
     "“Adrian Villa”, Dr Thomas Conn Britton, Physician & Surgeon, b.1887 in County Tyrone, d.1957 in Abbots Langley. (1922-1937) {3} (1920-1945) {1}",
     "“Adrian Villa”, Dr Sydney Hartill (1911 census, 29 years old, b. St Giles parish, Willenhall, Staffs. 1882, d. Stroud 1964). In partnership with Dr Frederick C. Fisher of Kings Langley {3}",
     "Conservative Club (1888-1895) {3}"] },
-  { group: "south-side", no: "81", name: "Glossary Hair Company", featured: true, photos: pair("81"), extras: [advert("81-advert")],
-    osm: "node/2441481442", lat: 51.705083, lng: -0.418191, lines: [
+  { group: "south-side", no: "81", name: "Glossary Hair Company", featured: true, photos: pair("81"), extras: [advert("81-advert")], osm: "node/2441481442", lat: 51.705083, lng: -0.418191, lines: [
     "1994 to present",
     "Therapy Zone Beauty Parlour, behind hairdresser (corner with Adrian Road)",
     "Pro Cut hairdressers (2008-2010)",
@@ -269,8 +272,7 @@ const DIRECTORY = [
     "Deli Licious",
     "Video hut (Sam)",
     "Co-op butchers (joined to Co-op grocers, earlier known as 71a High Street) (1938-1992/3)"] },
-  { group: "langley-parade", no: "2", name: "Langley Vets", osm: "node/2399943067", lat: 51.705886, lng: -0.417177,
-    extras: [advert("lp2-banner", "Langley Vets")], lines: [
+  { group: "langley-parade", no: "2", name: "Langley Vets", extras: [advert("lp2-banner", "Langley Vets")], osm: "node/2399943067", lat: 51.705886, lng: -0.417177, lines: [
     "Abbots Flooring (??-2024)",
     "Seasons Wines",
     "Off-licence, The Local",
@@ -280,8 +282,7 @@ const DIRECTORY = [
   { group: "langley-parade", no: "3", name: "The Hospice of St Francis Shop", osm: "node/2399943069", lat: 51.705827, lng: -0.417186, lines: [
     "The Wine Shop off-licence (1989-90) (Mrs David Miller) {22}",
     "Barclay’s Bank (temporary, built in 1970)"] },
-  { group: "langley-parade", no: "4", name: "Dolphin Fish Bar", osm: "node/2399943064", lat: 51.705762, lng: -0.417175,
-    extras: [advert("lp4-advert")], lines: [
+  { group: "langley-parade", no: "4", name: "Dolphin Fish Bar", extras: [advert("lp4-advert")], osm: "node/2399943064", lat: 51.705762, lng: -0.417175, lines: [
     "Red Herring Fish Bar, fish and chip shop",
     "Godman and Tonge, fish and chip shop (1971-??)",
     "Godman, fish and chip shop (1958-1970)",
@@ -328,8 +329,7 @@ const DIRECTORY = [
     "Previous owners: Dr and Mrs Peter Tomson (1956-202?) (gardens opened for charities)",
     "Garden nursery in 1990s",
     "Doctor’s Surgery: Drs Tomson, Fisher, Brown and Mawson (1956-1967) {3}"] },
-  { group: "north-side", no: "12", name: "The Village Tandoori", featured: true, photos: pair("12"), extras: [advert("12-advert")],
-    osm: "node/2399910280", lat: 51.706823, lng: -0.416856, lines: [
+  { group: "north-side", no: "12", name: "The Village Tandoori", featured: true, photos: pair("12"), extras: [advert("12-advert")], osm: "node/2399910280", lat: 51.706823, lng: -0.416856, lines: [
     "Sweet Sensation sweet shop (1992)",
     "The Flower Shop (1991)",
     "New Vision Satellite TV (1989)",
@@ -353,9 +353,7 @@ const DIRECTORY = [
     "Kelly and Nichols, solicitors; Kelly Nichols Blayney (1989)",
     "Langley Insurance Consultants (1972) {2}",
     "~ Present premises built on front garden of no.14, see above."] },
-  // OSM still names no. 16 "Your Move", its previous occupant; same premises
-  { group: "north-side", no: "16", name: "Crown Barbers", featured: true, photos: pair("16"),
-    osm: "node/2399910281", lat: 51.706670, lng: -0.416883, lines: [
+  { group: "north-side", no: "16", name: "Crown Barbers", featured: true, photos: pair("16"), osm: "node/2399910281", lat: 51.706670, lng: -0.416883, lines: [
     "Your Move, Estate Agent and the Leeds Building Society",
     "Weller, Hill & Hubble, estate agents (Leeds Permanent BS) (1980) {4}",
     "Bud-Jet flight shop {1}",
@@ -363,8 +361,7 @@ const DIRECTORY = [
     "Post Office, Jock Wright (1948-1964) {1}",
     "A. Evans, Fishmonger, Poulterer, Fruiterer, Greengrocer, “Est. 1866” (1933-1938) {3}",
     "A.W. Cave (& Son from 1927), Fishmonger and Poulterer (1886-1932) {1}"] },
-  { group: "north-side", no: "18", name: "Alexandra Jewellers", featured: true, photos: pair("18"),
-    osm: "node/2399910265", lat: 51.706635, lng: -0.416892, lines: [
+  { group: "north-side", no: "18", name: "Alexandra Jewellers", featured: true, photos: pair("18"), osm: "node/2399910265", lat: 51.706635, lng: -0.416892, lines: [
     "Est. 2016",
     "Velvet",
     "GA Estate Agents",
@@ -375,16 +372,14 @@ const DIRECTORY = [
     "K. Appel, Optician (1966)",
     "Doctors, WE and EG Haydon (1956-1966) {1,3,5}",
     "Post Office, Grocer and Draper, Mr. Thomas Turner and his daughters (1870-), Miss B. Turner (1926-27) {3}"] },
-  { group: "north-side", no: "20", name: "Noor Mahal", featured: true, photos: pair("20"), extras: [advert("20-advert")],
-    osm: "node/2399910278", lat: 51.706576, lng: -0.416924, lines: [
+  { group: "north-side", no: "20", name: "Noor Mahal", featured: true, photos: pair("20"), extras: [advert("20-advert")], osm: "node/2399910278", lat: 51.706576, lng: -0.416924, lines: [
     "The Viceroy of India (1989-??)",
     "Langley Foods (1966-1989) {13}",
     "Waitrose store (1962-1966) {19}",
     "Henry Kingham and Sons, grocers (1921-1962) {1}",
     "Seabrook’s grocery & provision store {3}, manager: W. Cooper (1909) {8}",
     "Abbots Supply Stores, Mr. Daniel Seabrook (1890-1926) {3}"] },
-  { group: "north-side", no: "22-26", pin: "24", name: "Morrisons Daily", extras: [advert("24-advert")],
-    osm: "node/2399910272", lat: 51.706478, lng: -0.416994, lines: [
+  { group: "north-side", no: "22-26", pin: "24", name: "Morrisons Daily", extras: [advert("24-advert")], osm: "node/2399910272", lat: 51.706478, lng: -0.416994, lines: [
     "# No. 24",
     "Martins News Agents {5,22}",
     "Martin McColl",
@@ -405,8 +400,7 @@ const DIRECTORY = [
     "Since 1972 (Est. business 1920)",
     "Previously residential (Mr and Mrs Dazeley lived there) {5}",
     "Lewis Wm Trapp, Boot repairer {6,21}, (1890-1931) {1,3}"] },
-  { group: "north-side", no: "30 & 32", pin: "32", name: "Haart Estate Agents and Village Café", featured: true, photos: pair("30-32"),
-    extras: [advert("32-advert-glenister"), advert("32-advert-millers")], osm: "node/2399910279", lat: 51.706348, lng: -0.417125, lines: [
+  { group: "north-side", no: "30 & 32", pin: "32", name: "Haart Estate Agents and Village Café", featured: true, photos: pair("30-32"), extras: [advert("32-advert-glenister"), advert("32-advert-millers")], osm: "node/2399910279", lat: 51.706348, lng: -0.417125, lines: [
     "# No. 30, Haart Estate Agents",
     "Spicer McColl, Estate Agent",
     "Cornerstone (Abbey National estate agency brand) (1988-1994)",
@@ -429,11 +423,9 @@ const DIRECTORY = [
     "Swifts dry cleaners (1970-??)",
     "Bricklayers Arms, public house (1878-1966)",
     "Site was a pond in 1867"] },
-  { group: "north-side", no: "", pin: "HH", name: "Henderson Hall (built 1902)", photos: pair("hh"),
-    osm: "way/219176339", lat: 51.706187, lng: -0.417445, lines: [
+  { group: "north-side", no: "", pin: "HH", name: "Henderson Hall (built 1902)", photos: pair("hh"), osm: "way/219176339", lat: 51.706187, lng: -0.417445, lines: [
     "Parish Room and County Library (1936-1940) {3}"] },
-  { group: "north-side", no: "38 & 38a", pin: "38", name: "La Banq", extras: [advert("38a-sign", "La Banq")],
-    osm: "node/2399601576", lat: 51.706058, lng: -0.417455, lines: [
+  { group: "north-side", no: "38 & 38a", pin: "38", name: "La Banq", extras: [advert("38a-sign", "La Banq")], osm: "node/2399601576", lat: 51.706058, lng: -0.417455, lines: [
     "# No. 38",
     "Barclays Bank (1912, rebuilt in 1960s)",
     "Harry George Linforth, Hairdresser & Tobacconist (1906-11) {3,6}",
@@ -478,8 +470,7 @@ const DIRECTORY = [
   { group: "causeway-parade", no: "80", name: "Vape Shop", osm: "way/218952091", lat: 51.705579, lng: -0.418279, lines: [
     "Tattoo No Saint",
     "Public toilets"] },
-  { group: "causeway-parade", no: "", pin: "G", name: "The Grange, Residential (built 1986)", photos: pair("grange"),
-    extras: [advert("grange-dairy", "Express Dairy vans")], osm: "way/219228108", lat: 51.705272, lng: -0.419230, lines: [
+  { group: "causeway-parade", no: "", pin: "G", name: "The Grange, Residential (built 1986)", photos: pair("grange"), extras: [advert("grange-dairy", "Express Dairy vans")], osm: "way/219228108", lat: 51.705272, lng: -0.419230, lines: [
     "E.W. Flowers (front of site), Petrol and Garage Repairs (1958-1983) {3}",
     "Express Dairy Depot (rear of site)",
     "Manor House outbuildings"] },

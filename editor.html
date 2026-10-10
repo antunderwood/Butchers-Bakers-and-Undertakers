@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Directory Editor</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<style>
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:400 900;font-display:swap;src:url(fonts/inter-tight-latin.woff2) format('woff2');}
+:root{--cream:#f4f0e6;--paper:#faf8f2;--ink:#14130f;--stone:#8c8579;--line:#dcd6c8;--olive:#5b6b45;--rust:#b5502e;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.4 'Inter Tight','Helvetica Neue',Helvetica,Arial,sans-serif;}
+[hidden]{display:none !important;}
+button,input,select,textarea{font:inherit;color:inherit;}
+button{padding:8px 14px;border:1.5px solid var(--ink);border-radius:999px;background:transparent;font-weight:600;cursor:pointer;}
+button.primary{background:var(--olive);border-color:var(--olive);color:var(--cream);}
+button.danger{border-color:var(--rust);color:var(--rust);}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);}
+textarea{resize:vertical;}
+label{display:block;font-size:13px;font-weight:600;color:var(--stone);}
+label > :is(input,select,textarea){margin-top:4px;color:var(--ink);font-weight:400;font-size:15px;}
+.bar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;background:var(--ink);color:var(--cream);}
+.bar h1{font-size:18px;margin:0 auto 0 0;}
+.bar button{border-color:var(--cream);}
+#status{flex-basis:100%;margin:0;font-size:14px;color:var(--line);}
+#status:empty{display:none;}
+#login{max-width:340px;margin:64px auto;padding:0 16px;display:grid;gap:14px;}
+#app{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 60px);}
+#list{border-right:1px solid var(--line);padding:16px;overflow-y:auto;max-height:calc(100vh - 60px);position:sticky;top:60px;}
+#list h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--stone);margin:18px 0 6px;}
+#list ol{list-style:none;margin:0;padding:0;}
+#list li button{width:100%;display:grid;grid-template-columns:4.6em 1fr;gap:6px;text-align:left;border:0;border-radius:6px;padding:6px 8px;font-weight:400;}
+#list li button[aria-current]{background:var(--ink);color:var(--cream);}
+#form{padding:16px;display:grid;gap:14px;grid-template-columns:repeat(4,1fr);align-content:start;max-width:1000px;}
+#form .wide{grid-column:1 / -1;}
+#form .half{grid-column:span 2;}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.check{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px;font-weight:400;}
+.check input{width:auto;}
+#map{height:380px;border-radius:8px;border:1px solid var(--line);}
+.hint{margin:0;font-size:13px;color:var(--stone);}
+.pin{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:2px solid var(--cream);background:var(--rust);color:var(--cream);font-weight:700;font-size:11px;box-shadow:0 2px 8px rgba(20,15,10,.5);cursor:grab;}
+details{font-size:13px;color:var(--stone);}
+@media (max-width:760px){
+  #app{grid-template-columns:1fr;}
+  #list{position:static;max-height:40vh;border-right:0;border-bottom:1px solid var(--line);}
+  #form{grid-template-columns:1fr 1fr;}
+  #form .half{grid-column:1 / -1;}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>Directory editor</h1>
+  <span id="who"></span>
+  <button id="save" class="primary" type="button" hidden>Save to the site</button>
+  <button id="logout" type="button" hidden>Log out</button>
+  <p id="status" role="status" aria-live="polite"></p>
+</header>
+
+<form id="login" hidden>
+  <p>Log in to add and edit entries in the directory of shops.</p>
+  <label>Name <input name="user" autocomplete="username" required></label>
+  <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+  <button class="primary" type="submit">Log in</button>
+</form>
+
+<div id="app" hidden>
+  <nav id="list" aria-label="Entries">
+    <input id="filter" type="search" placeholder="Filter by number or name" aria-label="Filter entries">
+    <div id="groups"></div>
+  </nav>
+  <form id="form" aria-label="Entry">
+    <div class="row wide">
+      <button id="add" type="button">New entry after this one</button>
+      <button id="up" type="button">Move up</button>
+      <button id="down" type="button">Move down</button>
+      <button id="remove" class="danger" type="button">Delete entry</button>
+    </div>
+    <label class="half">Section <select name="group"></select></label>
+    <label>Number <input name="no" placeholder="e.g. 17, 39 &amp; 41, or blank"></label>
+    <label>Map label <input name="pin" placeholder="Defaults to the number"></label>
+    <label class="wide">Name (current occupant) <input name="name" required></label>
+    <label class="check wide"><input name="featured" type="checkbox"> Featured on the front page (at most 10)</label>
+    <label class="wide">History, newest first, one occupant per line
+      <textarea name="lines" rows="9"></textarea></label>
+    <p class="hint wide">Footnotes as {3} or {3,6}. Start a line with “# ” for a sub-heading or “~ ” for an editorial note. Use curly quotes “ ” ’ rather than straight ones.</p>
+    <details class="wide"><summary>Footnote sources</summary><ol id="sources"></ol></details>
+    <label class="half">Summary (optional, shown under the name) <textarea name="summary" rows="2"></textarea></label>
+    <label class="half">Description (optional; blank line between paragraphs) <textarea name="description" rows="2"></textarea></label>
+    <div class="wide"><div id="map"></div></div>
+    <p id="maphint" class="hint wide"></p>
+    <label>Latitude <input name="lat" type="number" step="0.000001"></label>
+    <label>Longitude <input name="lng" type="number" step="0.000001"></label>
+    <label>OSM element <input name="osm" placeholder="e.g. node/2422174408"></label>
+    <div class="row"><button id="unplace" type="button">Remove from map</button></div>
+    <p id="media" class="hint wide"></p>
+  </form>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const form = $("#form");
+let groups, entries, sha, sel = 0;
+const changed = new Set(); // edited entries, and "deleted ..." labels
+const label = (e) => `${e.no} ${e.name}`.trim();
+const status = (msg) => { $("#status").textContent = msg; };
+
+async function api(path, body) {
+  const res = await fetch("/api/" + path, body === undefined ? {} :
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const out = await res.json().catch(() => ({ error: `Server error (${res.status})` }));
+  if (!res.ok) throw Object.assign(new Error(out.error), { status: res.status });
+  return out;
+}
+
+// --- Log in, then load the directory as it is on GitHub now (the live site can lag a minute behind) ---
+async function load() {
+  try {
+    const d = await api("data");
+    const data = new Function(d.text + "\nreturn { SOURCES, GROUPS, DIRECTORY };")();
+    ({ GROUPS: groups, DIRECTORY: entries } = data);
+    sha = d.sha;
+    $("#who").textContent = d.user;
+    $("#login").hidden = true;
+    $("#app").hidden = $("#save").hidden = $("#logout").hidden = false;
+    form.group.innerHTML = Object.entries(groups).map(([k, g]) => `<option value="${k}">${g.title}</option>`).join("");
+    $("#sources").innerHTML = Object.entries(data.SOURCES).map(([n, s]) => `<li value="${n}">${s}</li>`).join("");
+    startMap();
+    select(0);
+  } catch (err) {
+    if (err.status !== 401) return status(err.message);
+    $("#login").hidden = false;
+    $("#login").user.focus();
+  }
+}
+$("#login").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  try {
+    await api("login", { user: ev.target.user.value, password: ev.target.password.value });
+    status("");
+    load();
+  } catch (err) { status(err.message); }
+});
+$("#logout").onclick = async () => {
+  if (changed.size && !confirm("You have unsaved changes. Log out anyway?")) return;
+  changed.clear();
+  await api("logout", {});
+  location.reload();
+};
+
+// --- The list, grouped by section ---
+function renderList() {
+  const q = $("#filter").value.trim().toLowerCase();
+  $("#groups").innerHTML = Object.entries(groups).map(([k, g]) => {
+    const items = entries.map((e, i) => [e, i]).filter(([e]) => e.group === k && label(e).toLowerCase().includes(q));
+    return `<h2>${g.short}</h2><ol>${items.map(([e, i]) =>
+      `<li><button type="button" data-i="${i}"${i === sel ? ' aria-current="true"' : ""}><b>${e.no || e.pin || "·"}</b>${e.name}</button></li>`).join("")}</ol>`;
+  }).join("");
+}
+$("#groups").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-i]");
+  if (b) select(+b.dataset.i);
+});
+$("#filter").addEventListener("input", renderList);
+
+// --- The form ---
+function select(i) {
+  sel = i;
+  const e = entries[i];
+  for (const el of form.querySelectorAll("[name]")) {
+    if (el.type === "checkbox") el.checked = !!e[el.name];
+    else el.value = el.name === "lines" ? e.lines.join("\n") : e[el.name] ?? "";
+  }
+  $("#media").textContent = e.photos || e.extras
+    ? `${e.photos?.length || 0} photo(s) and ${e.extras?.length || 0} other image(s) are kept as they are (images are added in data/directory.js).` : "";
+  renderList();
+  $("#list [aria-current]")?.scrollIntoView({ block: "nearest" });
+  showOnMap(true);
+}
+// Keeps sections together in GROUPS order, so a section changed in the form moves the entry to its new section's end
+function regroup(e) {
+  const order = Object.keys(groups);
+  entries.splice(entries.indexOf(e), 1);
+  entries.push(e);
+  entries.sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
+  sel = entries.indexOf(e);
+}
+form.addEventListener("input", (ev) => {
+  const el = ev.target, e = entries[sel];
+  if (!el.name) return;
+  if (el.type === "checkbox") e[el.name] = el.checked || undefined;
+  else if (el.name === "lines") e.lines = el.value.split("\n").map((l) => l.trim()).filter(Boolean);
+  else if (el.name === "lat" || el.name === "lng") {
+    const lat = parseFloat(form.lat.value), lng = parseFloat(form.lng.value);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) Object.assign(e, { lat, lng });
+    else if (!form.lat.value && !form.lng.value) { delete e.lat; delete e.lng; }
+    showOnMap(false);
+  } else e[el.name] = el.value.trim() || undefined;
+  if (el.name === "group") regroup(e);
+  edited(e);
+  if (["no", "name", "group", "pin"].includes(el.name)) renderList();
+});
+form.addEventListener("submit", (ev) => ev.preventDefault());
+function edited(e) {
+  changed.add(e);
+  status(`Unsaved changes: ${changed.size}`);
+}
+const sameGroup = (step) => {
+  for (let j = sel + step; j >= 0 && j < entries.length; j += step) if (entries[j].group === entries[sel].group) return j;
+  return -1;
+};
+function move(step) {
+  const j = sameGroup(step);
+  if (j < 0) return;
+  [entries[sel], entries[j]] = [entries[j], entries[sel]];
+  edited(entries[j]);
+  select(j);
+}
+$("#up").onclick = () => move(-1);
+$("#down").onclick = () => move(1);
+$("#add").onclick = () => {
+  const e = { group: entries[sel].group, no: "", name: "New entry", lines: [] };
+  entries.splice(sel + 1, 0, e);
+  edited(e);
+  select(sel + 1);
+  form.no.focus();
+};
+$("#remove").onclick = () => {
+  const e = entries[sel];
+  if (!confirm(`Delete ${label(e)}? This takes effect when you save.`)) return;
+  entries.splice(sel, 1);
+  changed.delete(e);
+  changed.add("deleted " + label(e));
+  status(`Unsaved changes: ${changed.size}`);
+  select(Math.min(sel, entries.length - 1));
+};
+
+// --- The map: other entries as dots, this one as a pin to drag; a click places it ---
+let map, dots, pin;
+function startMap() {
+  if (map) return;
+  map = L.map("map");
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  const placed = entries.filter((e) => e.lat != null);
+  map.fitBounds(placed.map((e) => [e.lat, e.lng]), { padding: [24, 24] });
+  dots = L.layerGroup().addTo(map);
+  pin = L.marker([0, 0], { draggable: true, autoPan: true });
+  pin.on("dragend", () => place(pin.getLatLng()));
+  map.on("click", (ev) => place(ev.latlng));
+}
+function place({ lat, lng }) {
+  const e = entries[sel];
+  Object.assign(e, { lat: +lat.toFixed(6), lng: +lng.toFixed(6) });
+  delete e.osm; // the position is no longer the OSM element's
+  form.lat.value = e.lat;
+  form.lng.value = e.lng;
+  form.osm.value = "";
+  edited(e);
+  showOnMap(false);
+}
+function showOnMap(pan) {
+  const e = entries[sel];
+  dots.clearLayers();
+  entries.forEach((o, i) => {
+    if (i === sel || o.lat == null) return;
+    L.circleMarker([o.lat, o.lng], { radius: 5, color: "#14130f", weight: 1, fillColor: "#8c8579", fillOpacity: 0.9 })
+      .bindTooltip(label(o)).on("click", () => select(i)).addTo(dots);
+  });
+  const placed = e.lat != null;
+  if (placed) {
+    pin.setLatLng([e.lat, e.lng]).setIcon(L.divIcon({ className: "", html: `<span class="pin">${e.pin || e.no || "•"}</span>`, iconSize: [28, 28] })).addTo(map);
+    if (pan) map.setView([e.lat, e.lng], Math.max(map.getZoom(), 18));
+  } else pin.remove();
+  $("#maphint").textContent = placed
+    ? "Drag the pin, or click the map, to move this entry. Grey dots are other entries: click one to edit it."
+    : "Not on the map. Click the map to place this entry, or leave it off (houses, demolished buildings).";
+}
+$("#unplace").onclick = () => {
+  const e = entries[sel];
+  for (const k of ["lat", "lng", "osm"]) { delete e[k]; form[k].value = ""; }
+  edited(e);
+  showOnMap(false);
+};
+
+// --- Save: the whole directory goes to GitHub as one commit ---
+$("#save").onclick = async () => {
+  if (!changed.size) return status("Nothing to save.");
+  status("Saving…");
+  try {
+    ({ sha } = await api("save", { sha, entries, message: "Edit the directory: " + [...changed].map((c) => typeof c === "string" ? c : label(c)).join(", ") }));
+    changed.clear();
+    status("Saved. The live site updates in about a minute.");
+  } catch (err) { status(err.message); }
+};
+addEventListener("beforeunload", (ev) => { if (changed.size) ev.preventDefault(); });
+
+load();
+</script>
+</body>
+</html>

@@ -1,11 +1,21 @@
-// Cloudflare Worker serving the site as static assets: no Worker script, no build step.
+// Cloudflare Worker serving the site as static assets, plus worker.js for the editor's /api/* only.
 // GitHub Actions (.github/workflows/deploy-cloudflare.yml) deploys on every push to main; .assetsignore keeps the design working files out.
+// One-off setup for the editor: the EDITORS KV namespace below (created Oct 2026),
+// `npx wrangler secret put GITHUB_TOKEN`, then `node scripts/add-editor.js <name>` per editor.
 {
   "name": "allhs-bbu",
   "compatibility_date": "2026-10-04",
+  "main": "worker.js",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "run_worker_first": ["/api/*"]
   },
+  "kv_namespaces": [
+    { "binding": "EDITORS", "id": "c2a53a3a93bf4cf8876ac3d079cc4ba7" }
+  ],
+  "ratelimits": [
+    { "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }
+  ],
   "routes": [
     { "pattern": "allhs-bbu.flying-ant.uk", "custom_domain": true }
   ],
